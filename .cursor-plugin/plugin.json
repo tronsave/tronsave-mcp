@@ -1,0 +1,23 @@
+{
+  "name": "tronsave",
+  "description": "Rent TRON ENERGY and BANDWIDTH on TronSave: live quotes, wallet-signed or balance-paid orders, order management and auto-buy, from Cursor.",
+  "version": "1.4.0",
+  "author": {
+    "name": "TronSave",
+    "email": "admin@tronsave.io"
+  },
+  "homepage": "https://tronsave.io",
+  "repository": "https://github.com/tronsave/tronsave-mcp",
+  "license": "MIT",
+  "keywords": [
+    "tron",
+    "trx",
+    "energy",
+    "bandwidth",
+    "usdt",
+    "blockchain",
+    "mcp"
+  ],
+  "logo": "assets/logo/tronsave-mark.svg",
+  "mcpServers": ".cursor-plugin/mcp.json"
+}
