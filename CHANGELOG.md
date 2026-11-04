@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.1 — 2026-11-04
+
+### Added
+- The server identifies itself as "TronSave" with a logo: `initialize` returns `serverInfo.title`, `description`,
+  `websiteUrl` and `icons`, and `server.json` (registry schema 2025-12-11) carries `title` and `icons`, so
+  registries and clients stop showing the bare name "mcp".
+
 ## 1.5.0 — 2026-11-04
 
 ### Changed

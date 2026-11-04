@@ -43,10 +43,20 @@ export const rehydrateTransport = (transport: StreamableHTTPServerTransport, ses
   inner._initialized = true;
 };
 
+/** Logo shown by clients and registries; served from the public repository. */
+export const SERVER_ICON_URL = "https://raw.githubusercontent.com/tronsave/tronsave-mcp/main/assets/logo/tronsave-icon-512.png";
+
 /** One MCP server with every tool, the agent guide and the server instructions (HTTP and stdio share it). */
 export const createMcpServer = (container: AppContainer, tools: ToolDefinition[]): McpServer => {
   const server = new McpServer(
-    { name: container.env.MCP_SERVER_NAME, version: container.env.MCP_SERVER_VERSION },
+    {
+      name: container.env.MCP_SERVER_NAME,
+      title: "TronSave",
+      version: container.env.MCP_SERVER_VERSION,
+      description: "Rent TRON energy and bandwidth on the TronSave market: quotes, orders, auto-buy/auto-sell and account tools.",
+      websiteUrl: "https://tronsave.io",
+      icons: [{ src: SERVER_ICON_URL, mimeType: "image/png", sizes: ["512x512"] }],
+    },
     { instructions: SERVER_INSTRUCTIONS },
   );
   registerTools(server, tools);

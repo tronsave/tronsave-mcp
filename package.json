@@ -1,6 +1,6 @@
 {
   "name": "tronsave-mcp",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Agent-native MCP server for TronSave: rent TRON ENERGY/BANDWIDTH and manage TronSave accounts over Streamable HTTP, with API-key or wallet-signature auth.",
   "main": "dist/stdio.js",
   "bin": {

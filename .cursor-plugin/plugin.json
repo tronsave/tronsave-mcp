@@ -1,7 +1,7 @@
 {
   "name": "tronsave",
   "description": "Rent TRON ENERGY and BANDWIDTH on TronSave: live quotes, wallet-signed or balance-paid orders, order management and auto-buy, from Cursor.",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "author": {
     "name": "TronSave",
     "email": "admin@tronsave.io"

@@ -26,7 +26,11 @@ describe("stdio entrypoint", () => {
   });
 
   it("initializes and lists every tool", async () => {
-    expect(client.getServerVersion()?.name).toBe("TronSave MCP Server");
+    expect(client.getServerVersion()).toMatchObject({
+      name: "TronSave MCP Server",
+      title: "TronSave",
+      icons: [expect.objectContaining({ mimeType: "image/png" })],
+    });
     const { tools } = await client.listTools();
     expect(tools).toHaveLength(53);
   });

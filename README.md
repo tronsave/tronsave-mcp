@@ -100,7 +100,7 @@ docker compose up --build
 | `REST_RETRIES` | `2` | Retries for idempotent reads only |
 | `READINESS_UPSTREAM_TIMEOUT_MS` | `2000` | Upstream probe in `/readyz` |
 | `LOG_LEVEL` | `info` | `debug` adds redacted tool input/output bodies |
-| `MCP_SERVER_NAME` / `MCP_SERVER_VERSION` | `TronSave MCP Server` / `1.5.0` | Reported in `initialize` |
+| `MCP_SERVER_NAME` / `MCP_SERVER_VERSION` | `TronSave MCP Server` / `1.5.1` | Reported in `initialize` |
 | `PUBLIC_BASE_URL` | unset | Public origin, e.g. `https://mcp.tronsave.io`. Enables the OAuth authorization server and `/oauth/mcp` |
 | `OAUTH_ACCESS_TOKEN_TTL_SECONDS` / `OAUTH_REFRESH_TOKEN_TTL_SECONDS` | `3600` / `2592000` | OAuth token lifetimes (wallet sign-ins are capped at `SIGNATURE_MAX_AGE_SECONDS`) |
 | `TRUST_PROXY` | `1` | Reverse-proxy hops in front of the server (client IP for OAuth rate limits) |
