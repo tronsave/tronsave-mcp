@@ -37,7 +37,7 @@ export function createInternalTools(handlers: InternalHandlers): ToolDefinition[
       title: "Internal Account Information",
       description: withTronSaveAuth(
         "Retrieve the Tronsave internal account profile for the current logged-in session (wallet/represent address, balances, deposit address).",
-        "Use when the user needs their linked address or balance.",
+        "Use when the user needs their linked address or balance; for the full wallet profile use `tronsave_get_user_info`, for the ledger of deposits and payments `tronsave_list_internal_transactions`.",
         "Returns `{ id, balance (SUN string), representAddress, depositAddress }`; any API key in the payload is masked. Read-only.",
       ),
       auth: { mode: "session" },
@@ -84,7 +84,7 @@ export function createInternalTools(handlers: InternalHandlers): ToolDefinition[
       title: "Internal Account Order History",
       description: withTronSaveAuth(
         "List paginated order history for the internal account linked to the API key, newest first.",
-        "Use when the user asks about past purchases, fulfillment, payouts, or delegates on their internal account.",
+        "Use when the user asks about past purchases, fulfillment, payouts, or delegates on their internal account. This is the API-key path; wallet-signature sessions can also use `tronsave_list_orders` with `isOnlyMyOrder`.",
         "Read-only. Pair with `tronsave_internal_order_details` for a single order's full snapshot.",
       ),
       auth: { mode: "session" },
@@ -103,7 +103,7 @@ export function createInternalTools(handlers: InternalHandlers): ToolDefinition[
       title: "Internal Order Details",
       description: withTronSaveAuth(
         "Fetch full details for one internal-account order by order ID.",
-        "Use when monitoring fulfillment after `tronsave_internal_order_create`, or when the user asks for status on a specific order id.",
+        "Use when monitoring fulfillment after `tronsave_internal_order_create`, or when the user asks for status on a specific order id. API-key path; with a wallet signature `tronsave_get_order` returns the same order.",
         "Read-only. FRESHNESS: order state changes within seconds as the market matches — re-read immediately before acting.",
       ),
       auth: { mode: "session" },
@@ -124,7 +124,7 @@ export function createInternalTools(handlers: InternalHandlers): ToolDefinition[
       title: "Internal Market Order Book",
       description: withTronSaveAuth(
         "Return the current TronSave market depth/price tiers for ENERGY or BANDWIDTH via the api-key REST endpoint.",
-        "Use before `tronsave_internal_order_create` or `tronsave_internal_order_estimate` when the user needs live prices or liquidity.",
+        "Use before `tronsave_internal_order_create` or `tronsave_internal_order_estimate` when the user needs live prices or liquidity. Same depth as the public `tronsave_list_order_books`, plus SLOW/MEDIUM/FAST price tiers; use the public tool when there is no API key.",
         "Read-only. FRESHNESS: live market depth can change roughly every 3 seconds (one TRON block) — re-read immediately before placing an order.",
       ),
       auth: { mode: "session" },
@@ -143,7 +143,7 @@ export function createInternalTools(handlers: InternalHandlers): ToolDefinition[
       title: "Estimate TRX Cost Before Order",
       description: withTronSaveAuth(
         "Estimate the TRX cost and availability for a buy order before submitting it (api-key internal account).",
-        "Use when the user wants a quote or price check; feed the result into `tronsave_internal_order_create`.",
+        "Use when the user wants a quote or price check; feed the result into `tronsave_internal_order_create`. Quotes for `tronsave_create_order` come from `tronsave_estimate_buy_resource` instead.",
         "Read-only. FRESHNESS: `unitPrice`/`estimateTrx` are live and can change roughly every 3 seconds — re-estimate immediately before creating the order.",
       ),
       auth: { mode: "session" },
@@ -198,7 +198,7 @@ export function createInternalTools(handlers: InternalHandlers): ToolDefinition[
       title: "List Extendable Delegations",
       description: withTronSaveAuth(
         "Return extendable delegations for a receiver plus an `extendData` payload for the extension flow.",
-        "Use as STEP 1 before `tronsave_internal_create_extend_request` when the user wants to extend existing delegation time.",
+        "Use as STEP 1 before `tronsave_internal_create_extend_request` when the user wants to extend existing delegation time. This is the only source of submittable `extendData`; `tronsave_list_extendable_delegates` is a public market view, and `tronsave_list_extendable_receivers` finds which receiver to extend.",
         "Read-only; does not submit anything. FRESHNESS: pricing/availability change within seconds — run immediately before extending and pass the returned `extendData` unchanged.",
       ),
       auth: { mode: "session" },

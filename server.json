@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "name": "io.github.tronsave/mcp",
   "description": "Buy, sell and extend TRON Energy/Bandwidth on the TronSave market. Quotes need no login.",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "repository": {
     "url": "https://github.com/tronsave/tronsave-mcp",
     "source": "github"

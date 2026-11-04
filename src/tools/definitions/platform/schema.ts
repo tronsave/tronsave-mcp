@@ -522,8 +522,8 @@ export const resourcePoolInputSchema = z.object({
  * GraphQL `PoolSettingInput` — energy/bandwidth pools plus reclaim scope for auto sell.
  */
 export const poolSettingInputSchema = z.object({
-    energy: resourcePoolInputSchema.optional(),
-    bandwidth: resourcePoolInputSchema.optional(),
+    energy: resourcePoolInputSchema.optional().describe("Auto-sell rules for staked ENERGY; omit to leave ENERGY selling unchanged."),
+    bandwidth: resourcePoolInputSchema.optional().describe("Auto-sell rules for staked BANDWIDTH; omit to leave BANDWIDTH selling unchanged."),
     reclaim: autoReclaimTypeEnum
         .optional()
         .describe("Reclaim behaviour: ALL resources vs ONLY_TRONSAVE-managed delegations."),
@@ -551,9 +551,15 @@ export const addOnFeatureInputSchema = z.object({
  * Each root block is optional; pass the sections you intend to set in one call.
  */
 export const autoSellSettingMutationInputSchema = z.object({
-    paymentConfig: paymentConfigInputSchema.optional(),
-    poolSetting: poolSettingInputSchema.optional(),
-    addOnFeature: addOnFeatureInputSchema.optional(),
+    paymentConfig: paymentConfigInputSchema
+        .optional()
+        .describe("Where and how often seller earnings are paid out (address, DAILY/IMMEDIATE, payout window)."),
+    poolSetting: poolSettingInputSchema
+        .optional()
+        .describe("What the wallet sells automatically: per-resource price floor, duration bounds, minimum amount, reserve, and reclaim scope."),
+    addOnFeature: addOnFeatureInputSchema
+        .optional()
+        .describe("Optional extras: voting, auto-stake of idle TRX, suggest-sell hints."),
 });
 
 /** GraphQL `UserMutations.registerAutoSell` variables — same object shape as update. */

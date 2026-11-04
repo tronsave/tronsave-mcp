@@ -66,7 +66,7 @@ Errors are returned as `isError: true` with text `{"error":{"code","message","re
 
 **Internal Account Information** · auth: api key (login or header) · read-only, idempotent
 
-Retrieve the Tronsave internal account profile for the current logged-in session (wallet/represent address, balances, deposit address). Requires an internal API key: `tronsave_login` (api-key mode, or signature mode for a wallet with an internal account) or an `Authorization: ApiKey <key>` client header. Never pass API keys as tool arguments; the server forwards the key from the session/header to TronSave. Use when the user needs their linked address or balance. Returns `{ id, balance (SUN string), representAddress, depositAddress }`; any API key in the payload is masked. Read-only.
+Retrieve the Tronsave internal account profile for the current logged-in session (wallet/represent address, balances, deposit address). Requires an internal API key: `tronsave_login` (api-key mode, or signature mode for a wallet with an internal account) or an `Authorization: ApiKey <key>` client header. Never pass API keys as tool arguments; the server forwards the key from the session/header to TronSave. Use when the user needs their linked address or balance; for the full wallet profile use `tronsave_get_user_info`, for the ledger of deposits and payments `tronsave_list_internal_transactions`. Returns `{ id, balance (SUN string), representAddress, depositAddress }`; any API key in the payload is masked. Read-only.
 
 **Input**
 
@@ -106,7 +106,7 @@ Fetches the specific deposit address for the TronSave internal account. Requires
 
 **Internal Account Order History** · auth: api key (login or header) · read-only, idempotent
 
-List paginated order history for the internal account linked to the API key, newest first. Requires an internal API key: `tronsave_login` (api-key mode, or signature mode for a wallet with an internal account) or an `Authorization: ApiKey <key>` client header. Never pass API keys as tool arguments; the server forwards the key from the session/header to TronSave. Use when the user asks about past purchases, fulfillment, payouts, or delegates on their internal account. Read-only. Pair with `tronsave_internal_order_details` for a single order's full snapshot.
+List paginated order history for the internal account linked to the API key, newest first. Requires an internal API key: `tronsave_login` (api-key mode, or signature mode for a wallet with an internal account) or an `Authorization: ApiKey <key>` client header. Never pass API keys as tool arguments; the server forwards the key from the session/header to TronSave. Use when the user asks about past purchases, fulfillment, payouts, or delegates on their internal account. This is the API-key path; wallet-signature sessions can also use `tronsave_list_orders` with `isOnlyMyOrder`. Read-only. Pair with `tronsave_internal_order_details` for a single order's full snapshot.
 
 **Input**
 
@@ -126,7 +126,7 @@ List paginated order history for the internal account linked to the API key, new
 
 **Internal Order Details** · auth: api key (login or header) · read-only, idempotent
 
-Fetch full details for one internal-account order by order ID. Requires an internal API key: `tronsave_login` (api-key mode, or signature mode for a wallet with an internal account) or an `Authorization: ApiKey <key>` client header. Never pass API keys as tool arguments; the server forwards the key from the session/header to TronSave. Use when monitoring fulfillment after `tronsave_internal_order_create`, or when the user asks for status on a specific order id. Read-only. FRESHNESS: order state changes within seconds as the market matches — re-read immediately before acting.
+Fetch full details for one internal-account order by order ID. Requires an internal API key: `tronsave_login` (api-key mode, or signature mode for a wallet with an internal account) or an `Authorization: ApiKey <key>` client header. Never pass API keys as tool arguments; the server forwards the key from the session/header to TronSave. Use when monitoring fulfillment after `tronsave_internal_order_create`, or when the user asks for status on a specific order id. API-key path; with a wallet signature `tronsave_get_order` returns the same order. Read-only. FRESHNESS: order state changes within seconds as the market matches — re-read immediately before acting.
 
 **Input**
 
@@ -158,7 +158,7 @@ Fetch full details for one internal-account order by order ID. Requires an inter
 
 **Internal Market Order Book** · auth: api key (login or header) · read-only, idempotent
 
-Return the current TronSave market depth/price tiers for ENERGY or BANDWIDTH via the api-key REST endpoint. Requires an internal API key: `tronsave_login` (api-key mode, or signature mode for a wallet with an internal account) or an `Authorization: ApiKey <key>` client header. Never pass API keys as tool arguments; the server forwards the key from the session/header to TronSave. Use before `tronsave_internal_order_create` or `tronsave_internal_order_estimate` when the user needs live prices or liquidity. Read-only. FRESHNESS: live market depth can change roughly every 3 seconds (one TRON block) — re-read immediately before placing an order.
+Return the current TronSave market depth/price tiers for ENERGY or BANDWIDTH via the api-key REST endpoint. Requires an internal API key: `tronsave_login` (api-key mode, or signature mode for a wallet with an internal account) or an `Authorization: ApiKey <key>` client header. Never pass API keys as tool arguments; the server forwards the key from the session/header to TronSave. Use before `tronsave_internal_order_create` or `tronsave_internal_order_estimate` when the user needs live prices or liquidity. Same depth as the public `tronsave_list_order_books`, plus SLOW/MEDIUM/FAST price tiers; use the public tool when there is no API key. Read-only. FRESHNESS: live market depth can change roughly every 3 seconds (one TRON block) — re-read immediately before placing an order.
 
 **Input**
 
@@ -183,7 +183,7 @@ Return the current TronSave market depth/price tiers for ENERGY or BANDWIDTH via
 
 **Estimate TRX Cost Before Order** · auth: api key (login or header) · read-only, idempotent
 
-Estimate the TRX cost and availability for a buy order before submitting it (api-key internal account). Requires an internal API key: `tronsave_login` (api-key mode, or signature mode for a wallet with an internal account) or an `Authorization: ApiKey <key>` client header. Never pass API keys as tool arguments; the server forwards the key from the session/header to TronSave. Use when the user wants a quote or price check; feed the result into `tronsave_internal_order_create`. Read-only. FRESHNESS: `unitPrice`/`estimateTrx` are live and can change roughly every 3 seconds — re-estimate immediately before creating the order.
+Estimate the TRX cost and availability for a buy order before submitting it (api-key internal account). Requires an internal API key: `tronsave_login` (api-key mode, or signature mode for a wallet with an internal account) or an `Authorization: ApiKey <key>` client header. Never pass API keys as tool arguments; the server forwards the key from the session/header to TronSave. Use when the user wants a quote or price check; feed the result into `tronsave_internal_order_create`. Quotes for `tronsave_create_order` come from `tronsave_estimate_buy_resource` instead. Read-only. FRESHNESS: `unitPrice`/`estimateTrx` are live and can change roughly every 3 seconds — re-estimate immediately before creating the order.
 
 **Input**
 
@@ -240,7 +240,7 @@ Place a new buy order for ENERGY or BANDWIDTH on TronSave, paid from the interna
 
 **List Extendable Delegations** · auth: api key (login or header) · read-only, idempotent
 
-Return extendable delegations for a receiver plus an `extendData` payload for the extension flow. Requires an internal API key: `tronsave_login` (api-key mode, or signature mode for a wallet with an internal account) or an `Authorization: ApiKey <key>` client header. Never pass API keys as tool arguments; the server forwards the key from the session/header to TronSave. Use as STEP 1 before `tronsave_internal_create_extend_request` when the user wants to extend existing delegation time. Read-only; does not submit anything. FRESHNESS: pricing/availability change within seconds — run immediately before extending and pass the returned `extendData` unchanged.
+Return extendable delegations for a receiver plus an `extendData` payload for the extension flow. Requires an internal API key: `tronsave_login` (api-key mode, or signature mode for a wallet with an internal account) or an `Authorization: ApiKey <key>` client header. Never pass API keys as tool arguments; the server forwards the key from the session/header to TronSave. Use as STEP 1 before `tronsave_internal_create_extend_request` when the user wants to extend existing delegation time. This is the only source of submittable `extendData`; `tronsave_list_extendable_delegates` is a public market view, and `tronsave_list_extendable_receivers` finds which receiver to extend. Read-only; does not submit anything. FRESHNESS: pricing/availability change within seconds — run immediately before extending and pass the returned `extendData` unchanged.
 
 **Input**
 
@@ -370,7 +370,7 @@ _No arguments._
 
 **User Information** · auth: wallet signature · read-only, idempotent
 
-Read the current authenticated user's profile and linked TronSave internal account. Returns `{ caller, address, balance (SUN string), info, internalAccount }` — `info` carries referral/contact metadata and may be null; `internalAccount` is null when the wallet has not provisioned a TronSave internal balance yet. `internalAccount.apiKey` is masked. Requires a wallet signature identity. Read-only and idempotent. Use `tronsave_get_user_auto_setting` for the auto-sell config or `tronsave_get_user_permissions` for permission flags when the full profile is unnecessary.
+Read the current authenticated user's profile and linked TronSave internal account. For the internal balance alone use `tronsave_get_internal_account`; for referral data `tronsave_get_referral`. Returns `{ caller, address, balance (SUN string), info, internalAccount }` — `info` carries referral/contact metadata and may be null; `internalAccount` is null when the wallet has not provisioned a TronSave internal balance yet. `internalAccount.apiKey` is masked. Requires a wallet signature identity. Read-only and idempotent. Use `tronsave_get_user_auto_setting` for the auto-sell config or `tronsave_get_user_permissions` for permission flags when the full profile is unnecessary.
 
 **Input**
 
@@ -428,7 +428,7 @@ _No arguments._
 
 **Estimate Buy Resource** · auth: public · read-only, idempotent
 
-Quote price and availability for buying ENERGY or BANDWIDTH for a receiver address before placing an order. Returns `{ unitPrice (SUN/unit), durationSec, estimateTrx (total cost in SUN), availableResource, systemDepositAddress }` — map them to `tronsave_create_order` as `orderUnitPrice`, `orderDurationSec`, `paymentPaymentAmount`. Defaults: ENERGY, 100000 units (1000 for BANDWIDTH), 900 s. Read-only and safe to call repeatedly; no session is required, but backend rate limits apply. For order-book depth use `tronsave_list_order_books`; for the minimum unit price only use `tronsave_get_min_price`.
+Quote price and availability for buying ENERGY or BANDWIDTH for a receiver address before placing an order. This quote feeds `tronsave_create_order`; for `tronsave_internal_order_create` (API key) quote with `tronsave_internal_order_estimate`. Returns `{ unitPrice (SUN/unit), durationSec, estimateTrx (total cost in SUN), availableResource, systemDepositAddress }` — map them to `tronsave_create_order` as `orderUnitPrice`, `orderDurationSec`, `paymentPaymentAmount`. Defaults: ENERGY, 100000 units (1000 for BANDWIDTH), 900 s. Read-only and safe to call repeatedly; no session is required, but backend rate limits apply. For order-book depth use `tronsave_list_order_books`; for the minimum unit price only use `tronsave_get_min_price`.
 
 **Input**
 
@@ -456,7 +456,7 @@ Quote price and availability for buying ENERGY or BANDWIDTH for a receiver addre
 
 **Order Detail** · auth: wallet signature · read-only, idempotent
 
-Read one order by `id` and return its full snapshot for NORMAL, FAST, or EXTEND order types. Use this as the source of truth before `tronsave_update_order`, `tronsave_sell_order_manual`, or `tronsave_cancel_order` to avoid acting on stale state. Requires a wallet signature identity. Read-only and idempotent.
+Read one order by `id` and return its full snapshot for NORMAL, FAST, or EXTEND order types. With only an API key, use `tronsave_internal_order_details` instead. Use this as the source of truth before `tronsave_update_order`, `tronsave_sell_order_manual`, or `tronsave_cancel_order` to avoid acting on stale state. Requires a wallet signature identity. Read-only and idempotent.
 
 **Input**
 
@@ -474,7 +474,7 @@ Read one order by `id` and return its full snapshot for NORMAL, FAST, or EXTEND 
 
 **List Orders** · auth: public · read-only, idempotent
 
-Query the market order list with paging (`offset`, `limit` ≤ 10). Returns `{ orders: [{ id, requester?.address, receiver.address, resourceType, resourceAmount, remainAmount, durationSec, unitPrice (SUN), isOwner, isMatching, apy, createdAt, typeOrder (NORMAL|FAST|EXTEND) }] }`. `status`: `ACTIVE` = still matching, `COMPLETED` = no longer matching. Set `isOnlyMyOrder=true` (requires a wallet signature identity) to list orders requested by the caller's wallet. Use `tronsave_get_order` with an `id` for one snapshot before mutating an order.
+Query the market order list with paging (`offset`, `limit` ≤ 10). For an API-key account's own purchases use `tronsave_internal_order_history`. Returns `{ orders: [{ id, requester?.address, receiver.address, resourceType, resourceAmount, remainAmount, durationSec, unitPrice (SUN), isOwner, isMatching, apy, createdAt, typeOrder (NORMAL|FAST|EXTEND) }] }`. `status`: `ACTIVE` = still matching, `COMPLETED` = no longer matching. Set `isOnlyMyOrder=true` (requires a wallet signature identity) to list orders requested by the caller's wallet. Use `tronsave_get_order` with an `id` for one snapshot before mutating an order.
 
 **Input**
 
@@ -496,7 +496,7 @@ Query the market order list with paging (`offset`, `limit` ≤ 10). Returns `{ o
 
 **Order Book** · auth: public · read-only, idempotent
 
-Read market depth buckets for `ENERGY` or `BANDWIDTH`. Returns price buckets `{ min, max, value }` optionally scoped by viewer address, minimum delegate amount, and duration. No login required; read-only and idempotent. Use this to estimate market ranges before create/update decisions; pair with `tronsave_estimate_buy_resource` for quote-style buy estimation and `tronsave_get_order` for one concrete order.
+Read market depth buckets for `ENERGY` or `BANDWIDTH`. Public view; with an API key, `tronsave_internal_order_book` adds SLOW/MEDIUM/FAST price tiers. Returns price buckets `{ min, max, value }` optionally scoped by viewer address, minimum delegate amount, and duration. No login required; read-only and idempotent. Use this to estimate market ranges before create/update decisions; pair with `tronsave_estimate_buy_resource` for quote-style buy estimation and `tronsave_get_order` for one concrete order.
 
 **Input**
 
@@ -517,7 +517,7 @@ Read market depth buckets for `ENERGY` or `BANDWIDTH`. Returns price buckets `{ 
 
 **Get Minimum Unit Price** · auth: public · read-only, idempotent
 
-Quote the minimum unit price for a buy. Returns `{ minPrice }` (SUN per resource unit; per day when `durationSec` >= 86400) from GraphQL `market.estimateMinPrice` for the given `resourceType`, `buyAmount`, and `durationSec`. Optional `address` scopes context when the API supports it. No login required. Read-only and idempotent. Pair with `tronsave_estimate_buy_resource` for full buy quotes and `tronsave_list_order_books` for depth buckets.
+Quote the minimum unit price for a buy. Use when only the floor price matters; for a full purchase quote use `tronsave_estimate_buy_resource`, for a grid across amounts and durations `tronsave_get_price_table`. Returns `{ minPrice }` (SUN per resource unit; per day when `durationSec` >= 86400) from GraphQL `market.estimateMinPrice` for the given `resourceType`, `buyAmount`, and `durationSec`. Optional `address` scopes context when the API supports it. No login required. Read-only and idempotent. Pair with `tronsave_estimate_buy_resource` for full buy quotes and `tronsave_list_order_books` for depth buckets.
 
 **Input**
 
@@ -563,7 +563,7 @@ List extendable delegate candidates for a `receiver` and `resourceType` (ENERGY|
 
 **Create Order** · auth: public · write
 
-Create a buy order for ENERGY/BANDWIDTH delegated to `orderReceiver`. SPENDS FUNDS — confirm the plan with the user first. Inputs: `orderResourceType`, `orderReceiver`, `orderUnitPrice` (SUN, not TRX), `orderDurationSec`, `orderResourceAmount`, `paymentPaymentAmount` (SUN), and `paymentMethod`: `internal` — debits the TronSave internal balance (needs an api-key login/header or a signature login whose wallet has an internal account); `onchain` — no login needed, but `paymentSignedTx` must be the user's wallet-signed TRX transfer to `systemDepositAddress`. Take price/amount/duration values from the latest `tronsave_estimate_buy_resource`. Returns `{ success, message, code, data.orderId }` — check `success`; verify with `tronsave_get_order` or `tronsave_list_orders`. Not idempotent: on a timeout, verify before retrying to avoid duplicate orders.
+Create a buy order for ENERGY/BANDWIDTH delegated to `orderReceiver`. SPENDS FUNDS — confirm the plan with the user first. API-key integrations paying from the internal balance can instead use `tronsave_internal_order_create` (FAST/MEDIUM/SLOW pricing, fill guards). Inputs: `orderResourceType`, `orderReceiver`, `orderUnitPrice` (SUN, not TRX), `orderDurationSec`, `orderResourceAmount`, `paymentPaymentAmount` (SUN), and `paymentMethod`: `internal` — debits the TronSave internal balance (needs an api-key login/header or a signature login whose wallet has an internal account); `onchain` — no login needed, but `paymentSignedTx` must be the user's wallet-signed TRX transfer to `systemDepositAddress`. Take price/amount/duration values from the latest `tronsave_estimate_buy_resource`. Returns `{ success, message, code, data.orderId }` — check `success`; verify with `tronsave_get_order` or `tronsave_list_orders`. Not idempotent: on a timeout, verify before retrying to avoid duplicate orders.
 
 **Input**
 
@@ -682,15 +682,15 @@ Create the initial auto-sell configuration for the authenticated user. Returns t
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `paymentConfig` | object | no |  |
+| `paymentConfig` | object | no | Where and how often seller earnings are paid out (address, DAILY/IMMEDIATE, payout window). |
 | `paymentConfig.paymentAddress` | string | no | TRON address that receives payouts. (TRON address) |
 | `paymentConfig.paymentFrequency` | `DAILY` \| `IMMEDIATE` | no | DAILY vs IMMEDIATE settlement rhythm. |
 | `paymentConfig.paymentMode` | `FIXED` \| `RANDOM` | no | FIXED vs RANDOM payout mode when applicable. |
 | `paymentConfig.paymentTimeWindow` | object | no | Optional daily time window for scheduled payouts. |
 | `paymentConfig.paymentTimeWindow.start` | integer | yes | Window start as a non-negative GraphQL `Int` (TronSave commonly uses minutes from midnight UTC, `0..1439`). (min 0) |
 | `paymentConfig.paymentTimeWindow.end` | integer | yes | Window end as a non-negative GraphQL `Int` (same unit as `start`); end > start is enforced server-side, not by this schema. (min 0) |
-| `poolSetting` | object | no |  |
-| `poolSetting.energy` | object | no |  |
+| `poolSetting` | object | no | What the wallet sells automatically: per-resource price floor, duration bounds, minimum amount, reserve, and reclaim scope. |
+| `poolSetting.energy` | object | no | Auto-sell rules for staked ENERGY; omit to leave ENERGY selling unchanged. |
 | `poolSetting.energy.isAcceptExtended` | boolean | no | Whether incoming extend-style matches are accepted. |
 | `poolSetting.energy.maxDelegateDurationSec` | integer | no | Upper bound delegation duration (seconds). |
 | `poolSetting.energy.minDelegateDurationSec` | integer | no | Lower bound delegation duration (seconds). |
@@ -698,7 +698,7 @@ Create the initial auto-sell configuration for the authenticated user. Returns t
 | `poolSetting.energy.minDelegateAmount` | number | no | Minimum per-delegation resource amount. |
 | `poolSetting.energy.minPrice` | number | no | Minimum unit price accepted for auto matches. |
 | `poolSetting.energy.profitShare` | integer | no | Profit share percentage for this resource leg. |
-| `poolSetting.bandwidth` | object | no |  |
+| `poolSetting.bandwidth` | object | no | Auto-sell rules for staked BANDWIDTH; omit to leave BANDWIDTH selling unchanged. |
 | `poolSetting.bandwidth.isAcceptExtended` | boolean | no | Whether incoming extend-style matches are accepted. |
 | `poolSetting.bandwidth.maxDelegateDurationSec` | integer | no | Upper bound delegation duration (seconds). |
 | `poolSetting.bandwidth.minDelegateDurationSec` | integer | no | Lower bound delegation duration (seconds). |
@@ -707,7 +707,7 @@ Create the initial auto-sell configuration for the authenticated user. Returns t
 | `poolSetting.bandwidth.minPrice` | number | no | Minimum unit price accepted for auto matches. |
 | `poolSetting.bandwidth.profitShare` | integer | no | Profit share percentage for this resource leg. |
 | `poolSetting.reclaim` | `ALL` \| `ONLY_TRONSAVE` | no | Reclaim behaviour: ALL resources vs ONLY_TRONSAVE-managed delegations. |
-| `addOnFeature` | object | no |  |
+| `addOnFeature` | object | no | Optional extras: voting, auto-stake of idle TRX, suggest-sell hints. |
 | `addOnFeature.vote` | boolean | no | Enable vote-related automation when supported. |
 | `addOnFeature.withdrawVote` | number | no | GraphQL Float input for withdraw-vote configuration. |
 | `addOnFeature.stake` | object | no | Optional auto-stake policy. |
@@ -735,15 +735,15 @@ Update the existing auto-sell configuration with partial fields. Returns the upd
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `paymentConfig` | object | no |  |
+| `paymentConfig` | object | no | Where and how often seller earnings are paid out (address, DAILY/IMMEDIATE, payout window). |
 | `paymentConfig.paymentAddress` | string | no | TRON address that receives payouts. (TRON address) |
 | `paymentConfig.paymentFrequency` | `DAILY` \| `IMMEDIATE` | no | DAILY vs IMMEDIATE settlement rhythm. |
 | `paymentConfig.paymentMode` | `FIXED` \| `RANDOM` | no | FIXED vs RANDOM payout mode when applicable. |
 | `paymentConfig.paymentTimeWindow` | object | no | Optional daily time window for scheduled payouts. |
 | `paymentConfig.paymentTimeWindow.start` | integer | yes | Window start as a non-negative GraphQL `Int` (TronSave commonly uses minutes from midnight UTC, `0..1439`). (min 0) |
 | `paymentConfig.paymentTimeWindow.end` | integer | yes | Window end as a non-negative GraphQL `Int` (same unit as `start`); end > start is enforced server-side, not by this schema. (min 0) |
-| `poolSetting` | object | no |  |
-| `poolSetting.energy` | object | no |  |
+| `poolSetting` | object | no | What the wallet sells automatically: per-resource price floor, duration bounds, minimum amount, reserve, and reclaim scope. |
+| `poolSetting.energy` | object | no | Auto-sell rules for staked ENERGY; omit to leave ENERGY selling unchanged. |
 | `poolSetting.energy.isAcceptExtended` | boolean | no | Whether incoming extend-style matches are accepted. |
 | `poolSetting.energy.maxDelegateDurationSec` | integer | no | Upper bound delegation duration (seconds). |
 | `poolSetting.energy.minDelegateDurationSec` | integer | no | Lower bound delegation duration (seconds). |
@@ -751,7 +751,7 @@ Update the existing auto-sell configuration with partial fields. Returns the upd
 | `poolSetting.energy.minDelegateAmount` | number | no | Minimum per-delegation resource amount. |
 | `poolSetting.energy.minPrice` | number | no | Minimum unit price accepted for auto matches. |
 | `poolSetting.energy.profitShare` | integer | no | Profit share percentage for this resource leg. |
-| `poolSetting.bandwidth` | object | no |  |
+| `poolSetting.bandwidth` | object | no | Auto-sell rules for staked BANDWIDTH; omit to leave BANDWIDTH selling unchanged. |
 | `poolSetting.bandwidth.isAcceptExtended` | boolean | no | Whether incoming extend-style matches are accepted. |
 | `poolSetting.bandwidth.maxDelegateDurationSec` | integer | no | Upper bound delegation duration (seconds). |
 | `poolSetting.bandwidth.minDelegateDurationSec` | integer | no | Lower bound delegation duration (seconds). |
@@ -760,7 +760,7 @@ Update the existing auto-sell configuration with partial fields. Returns the upd
 | `poolSetting.bandwidth.minPrice` | number | no | Minimum unit price accepted for auto matches. |
 | `poolSetting.bandwidth.profitShare` | integer | no | Profit share percentage for this resource leg. |
 | `poolSetting.reclaim` | `ALL` \| `ONLY_TRONSAVE` | no | Reclaim behaviour: ALL resources vs ONLY_TRONSAVE-managed delegations. |
-| `addOnFeature` | object | no |  |
+| `addOnFeature` | object | no | Optional extras: voting, auto-stake of idle TRX, suggest-sell hints. |
 | `addOnFeature.vote` | boolean | no | Enable vote-related automation when supported. |
 | `addOnFeature.withdrawVote` | number | no | GraphQL Float input for withdraw-vote configuration. |
 | `addOnFeature.stake` | object | no | Optional auto-stake policy. |
@@ -840,7 +840,7 @@ Permanently delete one auto-buy rule by `id` (`MObjectId`). Side effect: stops a
 
 **Market Overview** · auth: public · read-only, idempotent
 
-Read the TronSave market summary: resource currently available and total listed for ENERGY and BANDWIDTH, number of pooled sellers, and seller APY (percent). Use for a quick 'how is the market' answer before pricing. Public, read-only. Data refreshes about every TRON block (3 s).
+Read the TronSave market summary: resource currently available and total listed for ENERGY and BANDWIDTH, number of pooled sellers, and seller APY (percent). Use for a quick 'how is the market' answer before pricing; for prices use `tronsave_get_price_table` (grid) or `tronsave_estimate_buy_resource` (one quote), for depth by price use `tronsave_list_order_books`. Public, read-only. Data refreshes about every TRON block (3 s).
 
 **Input**
 
@@ -858,13 +858,13 @@ _No arguments._
 
 **Resource Price Table** · auth: public · read-only, idempotent
 
-Read the price grid for ENERGY or BANDWIDTH: `prices[i][j]` is the unit price in SUN for `amounts[i]` resource units rented for `durations[j]` (e.g. '15m', '1h', '1d'). Durations of 1 day or longer are priced per day: '30d' at 40 SUN costs 40 x 30 SUN per unit in total. Use to compare cost across amounts and durations in one call; use `tronsave_estimate_buy_resource` for an exact quote. Public, read-only.
+Read the price grid for ENERGY or BANDWIDTH: `prices[i][j]` is the unit price in SUN for `amounts[i]` resource units rented for `durations[j]` (e.g. '15m', '1h', '1d'). Durations of 1 day or longer are priced per day: '30d' at 40 SUN costs 40 x 30 SUN per unit in total. Use to compare cost across amounts and durations in one call. For an exact quote on one purchase use `tronsave_estimate_buy_resource`; for only the floor price use `tronsave_get_min_price`. Public, read-only.
 
 **Input**
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `resourceType` | `ENERGY` \| `BANDWIDTH` | yes |  |
+| `resourceType` | `ENERGY` \| `BANDWIDTH` | yes | ENERGY (smart-contract calls) or BANDWIDTH (plain transfers). |
 | `address` | string | no | Optional receiver address; prices can depend on the account. (TRON address) |
 
 **Output (`structuredContent`)**
@@ -879,7 +879,7 @@ Read the price grid for ENERGY or BANDWIDTH: `prices[i][j]` is the unit price in
 
 **Protocol Parameters** · auth: public · read-only, idempotent
 
-Read TronSave and TRON protocol parameters: latest block, minimum buy amounts, TRX burn rates per unit, dynamic buy/lowest prices, the system deposit address, max lock period and the energy cost of a USDT transfer. Use to size purchases (minimums) and to compare renting with burning TRX. Public, read-only.
+Read TronSave and TRON protocol parameters: latest block, minimum buy amounts, TRX burn rates per unit, dynamic buy/lowest prices, the system deposit address, max lock period and the energy cost of a USDT transfer. Use to size purchases (minimums) and to compare renting with burning TRX. For market prices use `tronsave_get_price_table` or `tronsave_estimate_buy_resource`; for supply and APY use `tronsave_get_market_overview`. Public, read-only.
 
 **Input**
 
@@ -927,7 +927,7 @@ Ask the market how a buy would be filled: a plain new order, buying more only, o
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `resourceType` | `ENERGY` \| `BANDWIDTH` | yes |  |
+| `resourceType` | `ENERGY` \| `BANDWIDTH` | yes | ENERGY (smart-contract calls) or BANDWIDTH (plain transfers). |
 | `receiver` | string | yes | TRON base58 address that will receive the resource. (TRON address) |
 | `resourceAmount` | number | yes | Resource units to buy. |
 | `durationSec` | number | yes | Delegation duration in seconds. |
@@ -944,14 +944,14 @@ Ask the market how a buy would be filled: a plain new order, buying more only, o
 
 **Extendable Receivers** · auth: public · read-only, idempotent
 
-List the receiver addresses that have delegations bought by `requester` which can still be extended, with expiry time (Unix seconds), delegation count and total amount. Use as the first step of an extension flow to find which receiver to extend. Public (any requester address), read-only.
+List the receiver addresses that have delegations bought by `requester` which can still be extended, with expiry time (Unix seconds), delegation count and total amount. Use as the first step of an extension flow to find which receiver to extend, then `tronsave_list_extendable_delegates` (market view) or `tronsave_internal_extend_delegates` (API-key path, returns the `extendData` to submit). Public (any requester address), read-only.
 
 **Input**
 
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `requester` | string | yes | TRON base58 address that bought the delegations. (TRON address) |
-| `resourceType` | `ENERGY` \| `BANDWIDTH` | no |  |
+| `resourceType` | `ENERGY` \| `BANDWIDTH` | no | Only delegations of this resource; omit for both. |
 
 **Output (`structuredContent`)**
 
@@ -963,7 +963,7 @@ List the receiver addresses that have delegations bought by `requester` which ca
 
 **Seller Statistics** · auth: wallet signature · read-only, idempotent
 
-Read the logged-in seller's lifetime totals (delegations, resource delegated, TRX earned, average price per resource) and a daily earnings chart split into auto, manual, exclusive and extend delegations. Use for 'how much did I earn' questions. Requires a wallet signature identity. Read-only.
+Read the logged-in seller's lifetime totals (delegations, resource delegated, TRX earned, average price per resource) and a daily earnings chart split into auto, manual, exclusive and extend delegations. Use for 'how much did I earn' totals; for the individual delegations behind them use `tronsave_list_delegations`. Requires a wallet signature identity. Read-only.
 
 **Input**
 
@@ -983,17 +983,17 @@ Read the logged-in seller's lifetime totals (delegations, resource delegated, TR
 
 **Delegation History** · auth: wallet signature · read-only, idempotent
 
-List the logged-in seller's delegations (resource sent to buyers): amount, TRX amount, duration, unit price, type (AUTO, MANUAL, EXTEND, FAST), status and payout. Newest first. Requires a wallet signature identity. Read-only.
+List the logged-in seller's delegations (resource sent to buyers): amount, TRX amount, duration, unit price, type (AUTO, MANUAL, EXTEND, FAST), status and payout. Newest first; page with `offset`/`limit`. Use for a seller's per-delegation history; for earnings totals use `tronsave_get_seller_stats`, for orders the user bought use `tronsave_list_orders` (`isOnlyMyOrder`). Requires a wallet signature identity. Read-only.
 
 **Input**
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `offset` | integer | no | Rows to skip (default 0). (min 0) |
+| `offset` | integer | no | Number of delegations to skip for pagination (default 0); add `limit` to page forward. (min 0) |
 | `limit` | integer | no | Rows to return (default 20, max 50). (min 1, max 50) |
-| `timeFilterBy` | `All` \| `D7` \| `D30` | no |  |
-| `filterByTypeDelegate` | `AUTO` \| `MANUAL` \| `EXTEND` \| `FAST` | no |  |
-| `filterByResourceType` | `ENERGY` \| `BANDWIDTH` | no |  |
+| `timeFilterBy` | `All` \| `D7` \| `D30` | no | Time window: All, last 7 days (D7) or last 30 days (D30). Default All. |
+| `filterByTypeDelegate` | `AUTO` \| `MANUAL` \| `EXTEND` \| `FAST` | no | Only this delegation type: AUTO (auto-sell pool), MANUAL (`tronsave_sell_order_manual`), EXTEND (extensions), FAST (fast orders). Omit for all. |
+| `filterByResourceType` | `ENERGY` \| `BANDWIDTH` | no | Only ENERGY or only BANDWIDTH delegations; omit for both. |
 
 **Output (`structuredContent`)**
 
@@ -1011,7 +1011,7 @@ List the logged-in user's auto-buy rules: receiver, resource, unit price cap, th
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `offset` | integer | no |  (min 0) |
+| `offset` | integer | no | Number of rules to skip for pagination (default 0); add `limit` to page forward. (min 0) |
 | `limit` | integer | no | Rows to return (default 10, max 10). (min 1, max 10) |
 | `filterBy` | `ENERGY` \| `BANDWIDTH` | no | Only rules for this resource. |
 
@@ -1086,15 +1086,15 @@ Change an auto-buy rule by id: pause or resume it with `isActive`, or change any
 
 **Notifications** · auth: wallet signature · read-only, idempotent
 
-List the logged-in user's notifications (order created / filled / cancelled / reclaimed, referral payouts) newest first, with the unread count. Use to follow up on an order after creating it. Requires a wallet signature identity. Read-only.
+List the logged-in user's notifications (order created / filled / cancelled / reclaimed, referral payouts) newest first, with the unread count. Use to follow up on an order after creating it; page with `offset`/`limit`, and mark items read with `tronsave_mark_notifications_read`. Requires a wallet signature identity. Read-only.
 
 **Input**
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `offset` | integer | no |  (min 0) |
-| `limit` | integer | no | Default 20. (min 1, max 100) |
-| `unreadOnly` | boolean | no |  |
+| `offset` | integer | no | Number of notifications to skip for pagination (default 0); add `limit` to page forward. (min 0) |
+| `limit` | integer | no | Notifications to return (default 20, max 100). (min 1, max 100) |
+| `unreadOnly` | boolean | no | true returns only unread notifications; default false returns all. |
 
 **Output (`structuredContent`)**
 
@@ -1108,7 +1108,7 @@ List the logged-in user's notifications (order created / filled / cancelled / re
 
 **Mark Notifications Read** · auth: wallet signature · write, idempotent
 
-Mark one notification (by `id`) or, when `id` is omitted, ALL of the user's notifications as read. Only changes the read flag; idempotent. Requires a wallet signature identity.
+Mark one notification (by `id`) or, when `id` is omitted, ALL of the user's notifications as read. Get ids from `tronsave_list_notifications`. Only changes the read flag; idempotent. Requires a wallet signature identity.
 
 **Input**
 
@@ -1129,14 +1129,14 @@ Mark one notification (by `id`) or, when `id` is omitted, ALL of the user's noti
 
 **Referral Program** · auth: wallet signature · read-only, idempotent
 
-Read the logged-in user's referral status: own referral code, sponsor, referral counts, bonus earned and remaining (SUN strings), rank, the referral list (PENDING/ACTIVE) and recent commission payouts. Requires a wallet signature identity. Read-only.
+Read the logged-in user's referral status: own referral code, sponsor, referral counts, bonus earned and remaining (SUN strings), rank, the referral list (PENDING/ACTIVE) and recent commission payouts. Use for referral questions only; account profile is `tronsave_get_user_info`. `offset`/`limit` page the referral list and the payout list together. Requires a wallet signature identity. Read-only.
 
 **Input**
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `offset` | integer | no |  (min 0) |
-| `limit` | integer | no | Rows per list (default 10). (min 1, max 50) |
+| `offset` | integer | no | Number of rows of each list to skip for pagination (default 0); add `limit` to page forward. (min 0) |
+| `limit` | integer | no | Rows per list (default 10, max 50). (min 1, max 50) |
 | `filterBy` | `PENDING` \| `ACTIVE` | no | Only referrals in this status. |
 
 **Output (`structuredContent`)**
@@ -1150,7 +1150,7 @@ Read the logged-in user's referral status: own referral code, sponsor, referral 
 
 **Telegram Notification Settings** · auth: wallet signature · read-only, idempotent
 
-Read the Telegram alert filters of the logged-in user: seller alerts (remaining amount, duration, price and APY ranges, unlocked-only) and buyer alerts (reclaim warning time, low energy / bandwidth thresholds). `setting` is null when Telegram is not linked. Requires a wallet signature identity. Read-only.
+Read the Telegram alert filters of the logged-in user: seller alerts (remaining amount, duration, price and APY ranges, unlocked-only) and buyer alerts (reclaim warning time, low energy / bandwidth thresholds). `setting` is null when Telegram is not linked. Read these before changing them with `tronsave_update_telegram_notify_setting` (which replaces whole filter objects). For in-app alerts use `tronsave_list_notifications`. Requires a wallet signature identity. Read-only.
 
 **Input**
 
@@ -1172,36 +1172,36 @@ Replace the Telegram alert filters. Send the COMPLETE `sellerFilter` and/or `buy
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `sellerFilter` | object | no |  |
-| `sellerFilter.isEnabled` | boolean | yes |  |
-| `sellerFilter.onlySendUnlockOrders` | boolean | yes |  |
-| `sellerFilter.remainAmount` | object | yes |  |
-| `sellerFilter.remainAmount.isEnabled` | boolean | yes |  |
-| `sellerFilter.remainAmount.from` | number | yes |  |
-| `sellerFilter.remainAmount.to` | number | yes |  |
-| `sellerFilter.duration` | object | yes |  |
-| `sellerFilter.duration.isEnabled` | boolean | yes |  |
-| `sellerFilter.duration.from` | number | yes |  |
-| `sellerFilter.duration.to` | number | yes |  |
-| `sellerFilter.price` | object | yes |  |
-| `sellerFilter.price.isEnabled` | boolean | yes |  |
-| `sellerFilter.price.from` | number | yes |  |
-| `sellerFilter.price.to` | number | yes |  |
-| `sellerFilter.apy` | object | yes |  |
-| `sellerFilter.apy.isEnabled` | boolean | yes |  |
-| `sellerFilter.apy.from` | number | yes |  |
-| `sellerFilter.apy.to` | number | yes |  |
-| `buyerFilter` | object | no |  |
-| `buyerFilter.isEnabled` | boolean | yes |  |
-| `buyerFilter.reclaimAlertTime` | object | yes |  |
-| `buyerFilter.reclaimAlertTime.isEnabled` | boolean | yes |  |
-| `buyerFilter.reclaimAlertTime.value` | number | yes |  |
-| `buyerFilter.lowResourceAlertEnergy` | object | yes |  |
-| `buyerFilter.lowResourceAlertEnergy.isEnabled` | boolean | yes |  |
-| `buyerFilter.lowResourceAlertEnergy.value` | number | yes |  |
-| `buyerFilter.lowResourceAlertBandwidth` | object | yes |  |
-| `buyerFilter.lowResourceAlertBandwidth.isEnabled` | boolean | yes |  |
-| `buyerFilter.lowResourceAlertBandwidth.value` | number | yes |  |
+| `sellerFilter` | object | no | Complete seller alert filter; omit to leave seller alerts unchanged. |
+| `sellerFilter.isEnabled` | boolean | yes | Master switch for seller alerts (new buy orders on the market). |
+| `sellerFilter.onlySendUnlockOrders` | boolean | yes | true alerts only for orders that do not lock the seller's resource. |
+| `sellerFilter.remainAmount` | object | yes | Alert only for orders whose remaining unfilled resource units is in this range. |
+| `sellerFilter.remainAmount.isEnabled` | boolean | yes | Whether this range filter is applied. |
+| `sellerFilter.remainAmount.from` | number | yes | Lower bound (remaining unfilled resource units). |
+| `sellerFilter.remainAmount.to` | number | yes | Upper bound (remaining unfilled resource units). |
+| `sellerFilter.duration` | object | yes | Alert only for orders whose rental duration in seconds is in this range. |
+| `sellerFilter.duration.isEnabled` | boolean | yes | Whether this range filter is applied. |
+| `sellerFilter.duration.from` | number | yes | Lower bound (rental duration in seconds). |
+| `sellerFilter.duration.to` | number | yes | Upper bound (rental duration in seconds). |
+| `sellerFilter.price` | object | yes | Alert only for orders whose unit price in SUN is in this range. |
+| `sellerFilter.price.isEnabled` | boolean | yes | Whether this range filter is applied. |
+| `sellerFilter.price.from` | number | yes | Lower bound (unit price in SUN). |
+| `sellerFilter.price.to` | number | yes | Upper bound (unit price in SUN). |
+| `sellerFilter.apy` | object | yes | Alert only for orders whose seller APY in percent is in this range. |
+| `sellerFilter.apy.isEnabled` | boolean | yes | Whether this range filter is applied. |
+| `sellerFilter.apy.from` | number | yes | Lower bound (seller APY in percent). |
+| `sellerFilter.apy.to` | number | yes | Upper bound (seller APY in percent). |
+| `buyerFilter` | object | no | Complete buyer alert filter; omit to leave buyer alerts unchanged. |
+| `buyerFilter.isEnabled` | boolean | yes | Master switch for buyer alerts (your delegations and resources). |
+| `buyerFilter.reclaimAlertTime` | object | yes | Alert when seconds left before a delegation is reclaimed is reached. |
+| `buyerFilter.reclaimAlertTime.isEnabled` | boolean | yes | Whether this alert is sent. |
+| `buyerFilter.reclaimAlertTime.value` | number | yes | Threshold: seconds left before a delegation is reclaimed. |
+| `buyerFilter.lowResourceAlertEnergy` | object | yes | Alert when remaining ENERGY units of the receiver is reached. |
+| `buyerFilter.lowResourceAlertEnergy.isEnabled` | boolean | yes | Whether this alert is sent. |
+| `buyerFilter.lowResourceAlertEnergy.value` | number | yes | Threshold: remaining ENERGY units of the receiver. |
+| `buyerFilter.lowResourceAlertBandwidth` | object | yes | Alert when remaining BANDWIDTH units of the receiver is reached. |
+| `buyerFilter.lowResourceAlertBandwidth.isEnabled` | boolean | yes | Whether this alert is sent. |
+| `buyerFilter.lowResourceAlertBandwidth.value` | number | yes | Threshold: remaining BANDWIDTH units of the receiver. |
 
 **Output (`structuredContent`)**
 
@@ -1233,14 +1233,14 @@ Read the logged-in user's Telegram agency bot (resale bot): name, username, stat
 
 **Internal Account Transactions** · auth: wallet signature · read-only, idempotent
 
-List the TRX ledger of the logged-in user's internal account (deposits, order payments, refunds), newest first, with the current balance and deposit address. Amounts are SUN strings. Use to reconcile spending after orders. Requires a wallet signature identity. Read-only.
+List the TRX ledger of the logged-in user's internal account (deposits, order payments, refunds), newest first, with the current balance and deposit address. Amounts are SUN strings. Use to reconcile spending after orders. For the orders themselves use `tronsave_internal_order_history` (API key) or `tronsave_list_orders` (`isOnlyMyOrder`); for the balance alone, `tronsave_get_internal_account`. Page with `offset`/`limit`. Requires a wallet signature identity. Read-only.
 
 **Input**
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `offset` | integer | no |  (min 0) |
-| `limit` | integer | no | Default 20. (min 1, max 50) |
+| `offset` | integer | no | Number of ledger entries to skip for pagination (default 0); add `limit` to page forward. (min 0) |
+| `limit` | integer | no | Ledger entries to return (default 20, max 50). (min 1, max 50) |
 
 **Output (`structuredContent`)**
 
@@ -1252,7 +1252,7 @@ List the TRX ledger of the logged-in user's internal account (deposits, order pa
 
 **My Flash Unstake Request** · auth: wallet signature · read-only, idempotent
 
-Read the logged-in user's flash-unstake request (selling staked TRX early for an immediate payout): state, payout state, amounts and release progress. `request` is null when there is none. Requires a wallet signature identity. Read-only.
+Read the logged-in user's flash-unstake request (selling staked TRX early for an immediate payout): state, payout state, amounts and release progress. `request` is null when there is none. Use for the user's own request; to preview a payout before requesting use `tronsave_estimate_flash_unstake`, to browse everyone's orders use `tronsave_list_flash_unstake_orders`. Requires a wallet signature identity. Read-only.
 
 **Input**
 
@@ -1268,15 +1268,15 @@ _No arguments._
 
 **Flash Unstake Market** · auth: public · read-only, idempotent
 
-Browse the flash-unstake market: `available` (open orders buyers can take), `ongoing` (being paid out) or `completed`. Amounts are SUN-scaled numbers; `estimateCompletionTime` is seconds. Public, read-only.
+Browse the flash-unstake market: `available` (open orders buyers can take), `ongoing` (being paid out) or `completed`. Amounts are SUN-scaled numbers; `estimateCompletionTime` is seconds. Use to browse the whole market; the user's own request is `tronsave_get_flash_unstake_request` and a payout preview is `tronsave_estimate_flash_unstake`. Public, read-only.
 
 **Input**
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `kind` | `available` \| `ongoing` \| `completed` | no | Default available. |
-| `offset` | integer | no |  (min 0) |
-| `limit` | integer | no | Default 10. (min 1, max 50) |
+| `kind` | `available` \| `ongoing` \| `completed` | no | Which orders to list: available (default), ongoing or completed. |
+| `offset` | integer | no | Number of orders to skip for pagination (default 0); add `limit` to page forward. (min 0) |
+| `limit` | integer | no | Orders to return (default 10, max 50). (min 1, max 50) |
 
 **Output (`structuredContent`)**
 
@@ -1289,7 +1289,7 @@ Browse the flash-unstake market: `available` (open orders buyers can take), `ong
 
 **Estimate Flash Unstake** · auth: public · read-only, idempotent
 
-Estimate what an address would receive by flash-unstaking all its staked TRX now: total staked, fee percentage, payout, delegations to reclaim and the minimum unstake amount. Nothing is submitted. Public (any address), read-only. Fails with 404 when the address has nothing staked.
+Estimate what an address would receive by flash-unstaking all its staked TRX now: total staked, fee percentage, payout, delegations to reclaim and the minimum unstake amount. Nothing is submitted. Use before requesting a flash unstake; check an existing request with `tronsave_get_flash_unstake_request`. Public (any address), read-only. Fails with 404 when the address has nothing staked.
 
 **Input**
 
@@ -1314,7 +1314,7 @@ Buy the SAME amount of ENERGY or BANDWIDTH for several receiver addresses in one
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `resourceType` | `ENERGY` \| `BANDWIDTH` | yes |  |
+| `resourceType` | `ENERGY` \| `BANDWIDTH` | yes | Resource bought for every receiver. |
 | `receivers` | string[] | yes | Receiver addresses (1 to 50). |
 | `unitPrice` | number | yes | Unit price in SUN per resource unit, per receiver. |
 | `durationSec` | number | yes | Delegation duration in seconds. |

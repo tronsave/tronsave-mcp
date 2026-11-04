@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Publishes a snapshot of the current commit to the public repo github.com/tronsave/tronsave-mcp:
-# one commit per release (no private history), force-pushed to `main`, plus a GitHub release
-# for the package.json version with that version's CHANGELOG section as notes.
+# one commit per release on top of the public `main` (no private history, author tronsave), plus
+# a GitHub release for the package.json version with that version's CHANGELOG section as notes.
+# Appending (not force-pushing) keeps release history and commit SHAs stable for registries
+# such as Glama, which score maintenance on recent commits and build pinned SHAs.
 #
 #   scripts/publish-public.sh            # publish HEAD
 #   PUBLIC_REPO=owner/name scripts/publish-public.sh
@@ -25,6 +27,10 @@ tag="v${version}"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
+gh auth setup-git >/dev/null 2>&1 || true
+git clone -q --depth 1 "https://github.com/${PUBLIC_REPO}.git" "$work"
+# Replace the tracked tree with this snapshot; the clone's .git keeps the public history.
+git -C "$work" rm -rq --ignore-unmatch .
 git archive HEAD | tar -x -C "$work"
 for path in "${EXCLUDE[@]}"; do rm -rf "${work:?}/$path"; done
 
@@ -38,14 +44,15 @@ notes="$(cat "$work/.release-notes.md")"
 rm "$work/.release-notes.md"
 
 cd "$work"
-git init -q -b main
 git add -A
-git -c user.name=tronsave -c user.email=121288350+tronsave@users.noreply.github.com \
-  commit -q -m "Release ${tag}"
-git remote add origin "https://github.com/${PUBLIC_REPO}.git"
-gh auth setup-git >/dev/null 2>&1 || true
-git push -q --force origin main
-git tag "$tag"
+if git diff --cached --quiet; then
+  echo "Public tree already matches ${tag}; no new commit."
+else
+  git -c user.name=tronsave -c user.email=121288350+tronsave@users.noreply.github.com \
+    commit -q -m "Release ${tag}"
+  git push -q origin main
+fi
+git tag -f "$tag"
 git push -q --force origin "$tag"
 
 if gh release view "$tag" -R "$PUBLIC_REPO" >/dev/null 2>&1; then

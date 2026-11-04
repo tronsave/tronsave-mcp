@@ -9,7 +9,7 @@ const envSchema = z.object({
   MCP_PORT: z.coerce.number().int().positive().default(3000),
   REDIS_URL: z.string().default("redis://localhost:6379"),
   MCP_SERVER_NAME: z.string().default("TronSave MCP Server"),
-  MCP_SERVER_VERSION: z.string().default("1.4.1"),
+  MCP_SERVER_VERSION: z.string().default("1.5.0"),
   GRAPHQL_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
   REST_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
   REST_RETRIES: z.coerce.number().int().min(0).default(2),

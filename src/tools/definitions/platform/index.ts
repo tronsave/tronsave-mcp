@@ -144,6 +144,7 @@ export function createPlatformTools(handlers: PlatformHandlers): ToolDefinition[
         title: "User Information",
         description:
             "Read the current authenticated user's profile and linked TronSave internal account. " +
+            "For the internal balance alone use `tronsave_get_internal_account`; for referral data `tronsave_get_referral`. " +
             "Returns `{ caller, address, balance (SUN string), info, internalAccount }` — " +
             "`info` carries referral/contact metadata and may be null; `internalAccount` is null when the " +
             "wallet has not provisioned a TronSave internal balance yet. " +
@@ -204,6 +205,7 @@ export function createPlatformTools(handlers: PlatformHandlers): ToolDefinition[
         title: "Estimate Buy Resource",
         description:
             "Quote price and availability for buying ENERGY or BANDWIDTH for a receiver address before placing an order. " +
+            "This quote feeds `tronsave_create_order`; for `tronsave_internal_order_create` (API key) quote with `tronsave_internal_order_estimate`. " +
             "Returns `{ unitPrice (SUN/unit), durationSec, estimateTrx (total cost in SUN), availableResource, systemDepositAddress }` — " +
             "map them to `tronsave_create_order` as `orderUnitPrice`, `orderDurationSec`, `paymentPaymentAmount`. " +
             "Defaults: ENERGY, 100000 units (1000 for BANDWIDTH), 900 s. " +
@@ -225,6 +227,7 @@ export function createPlatformTools(handlers: PlatformHandlers): ToolDefinition[
         title: "Order Detail",
         description:
             "Read one order by `id` and return its full snapshot for NORMAL, FAST, or EXTEND order types. " +
+            "With only an API key, use `tronsave_internal_order_details` instead. " +
             "Use this as the source of truth before `tronsave_update_order`, `tronsave_sell_order_manual`, or `tronsave_cancel_order` " +
             "to avoid acting on stale state. " +
             "Requires a wallet signature identity. Read-only and idempotent.",
@@ -244,6 +247,7 @@ export function createPlatformTools(handlers: PlatformHandlers): ToolDefinition[
         title: "List Orders",
         description:
             "Query the market order list with paging (`offset`, `limit` ≤ 10). " +
+            "For an API-key account's own purchases use `tronsave_internal_order_history`. " +
             "Returns `{ orders: [{ id, requester?.address, receiver.address, resourceType, resourceAmount, remainAmount, " +
             "durationSec, unitPrice (SUN), isOwner, isMatching, apy, createdAt, typeOrder (NORMAL|FAST|EXTEND) }] }`. " +
             "`status`: `ACTIVE` = still matching, `COMPLETED` = no longer matching. " +
@@ -265,6 +269,7 @@ export function createPlatformTools(handlers: PlatformHandlers): ToolDefinition[
         title: "Order Book",
         description:
             "Read market depth buckets for `ENERGY` or `BANDWIDTH`. " +
+            "Public view; with an API key, `tronsave_internal_order_book` adds SLOW/MEDIUM/FAST price tiers. " +
             "Returns price buckets `{ min, max, value }` optionally scoped by viewer address, minimum delegate amount, and duration. " +
             "No login required; read-only and idempotent. " +
             "Use this to estimate market ranges before create/update decisions; pair with " +
@@ -285,6 +290,7 @@ export function createPlatformTools(handlers: PlatformHandlers): ToolDefinition[
         title: "Get Minimum Unit Price",
         description:
             "Quote the minimum unit price for a buy. " +
+            "Use when only the floor price matters; for a full purchase quote use `tronsave_estimate_buy_resource`, for a grid across amounts and durations `tronsave_get_price_table`. " +
             "Returns `{ minPrice }` (SUN per resource unit; per day when `durationSec` >= 86400) from GraphQL `market.estimateMinPrice` for the given " +
             "`resourceType`, `buyAmount`, and `durationSec`. Optional `address` scopes context when the API supports it. " +
             "No login required. Read-only and idempotent. " +
@@ -326,6 +332,7 @@ export function createPlatformTools(handlers: PlatformHandlers): ToolDefinition[
         title: "Create Order",
         description:
             "Create a buy order for ENERGY/BANDWIDTH delegated to `orderReceiver`. SPENDS FUNDS — confirm the plan with the user first. " +
+            "API-key integrations paying from the internal balance can instead use `tronsave_internal_order_create` (FAST/MEDIUM/SLOW pricing, fill guards). " +
             "Inputs: `orderResourceType`, `orderReceiver`, `orderUnitPrice` (SUN, not TRX), `orderDurationSec`, `orderResourceAmount`, " +
             "`paymentPaymentAmount` (SUN), and `paymentMethod`: " +
             "`internal` — debits the TronSave internal balance (needs an api-key login/header or a signature login whose wallet has an internal account); " +

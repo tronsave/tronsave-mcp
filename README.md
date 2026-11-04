@@ -3,7 +3,7 @@
 ![MCP](https://img.shields.io/badge/MCP-2025--11--25-blue)
 ![Transport](https://img.shields.io/badge/Transport-Streamable%20HTTP-green)
 ![Node](https://img.shields.io/badge/Node-%E2%89%A522-339933)
-![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
 An agent-native [Model Context Protocol](https://modelcontextprotocol.io) server for [TronSave](https://tronsave.io): AI agents can quote, buy and manage TRON **ENERGY / BANDWIDTH** and TronSave accounts through 53 typed tools.
 
@@ -34,16 +34,23 @@ An agent-native [Model Context Protocol](https://modelcontextprotocol.io) server
 
 ## Tools at a glance
 
+53 tools in two payment paths. **Market path**: public quotes, plus orders paid on-chain or managed with a wallet signature. **Internal-balance path** (`tronsave_internal_*`): orders paid from a pre-funded TronSave balance with an API key, for bots and backends. Each tool description says when to use its counterpart on the other path.
+
 | Group | Tools | Auth |
 |---|---|---|
-| Session | `tronsave_get_session_status`, `tronsave_get_sign_message`, `tronsave_login`, `tronsave_logout` | public |
-| Market | `tronsave_estimate_buy_resource`, `tronsave_get_min_price`, `tronsave_list_order_books`, `tronsave_list_orders`, `tronsave_list_extendable_delegates` | public |
-| Buy | `tronsave_create_order` | public (`onchain`) / api key (`internal`) |
-| Orders | `tronsave_get_order`, `tronsave_update_order`, `tronsave_cancel_order`, `tronsave_sell_order_manual` | wallet signature |
-| Account | `tronsave_get_user_info`, `tronsave_get_user_permissions`, `tronsave_get_user_auto_setting`, `tronsave_register_auto_sell`, `tronsave_update_auto_sell_setting`, `tronsave_generate_api_key`, `tronsave_revoke_api_key`, `tronsave_delete_auto_buy_setting` | wallet signature |
-| Internal balance | `tronsave_get_internal_account`, `tronsave_get_deposit_address`, `tronsave_internal_create_extend_request` | api key |
+| Session | `get_session_status`, `get_sign_message`, `login`, `logout` | public |
+| Market data | `get_market_overview`, `get_price_table`, `get_system_info`, `get_min_price`, `list_order_books`, `get_account_resources` | public |
+| Quote and buy | `estimate_buy_resource`, `suggest_create_order`, `create_order`, `list_orders` | public (on-chain payment) |
+| Extend | `list_extendable_receivers`, `list_extendable_delegates` | public |
+| Flash unstake | `list_flash_unstake_orders`, `estimate_flash_unstake`, `get_flash_unstake_request` | public / wallet |
+| Orders | `get_order`, `update_order`, `cancel_order`, `sell_order_manual` | wallet signature |
+| Account | `get_user_info`, `get_user_permissions`, `get_referral`, `generate_api_key`, `revoke_api_key` | wallet signature |
+| Auto-sell | `get_user_auto_setting`, `register_auto_sell`, `update_auto_sell_setting`, `get_seller_stats`, `list_delegations` | wallet signature |
+| Auto-buy and bulk | `list_auto_buy_settings`, `create_auto_buy_setting`, `update_auto_buy_setting`, `delete_auto_buy_setting`, `bulk_create_internal_orders` | wallet signature |
+| Alerts | `list_notifications`, `mark_notifications_read`, `get_telegram_notify_setting`, `update_telegram_notify_setting`, `get_agency_bot` | wallet signature |
+| Internal balance | `get_internal_account`, `get_deposit_address`, `list_internal_transactions`, `internal_order_book`, `internal_order_estimate`, `internal_order_create`, `internal_order_history`, `internal_order_details`, `internal_extend_delegates`, `internal_create_extend_request` | API key (`list_internal_transactions`: wallet) |
 
-Full details: [docs/TOOLS.md](docs/TOOLS.md).
+All names carry the `tronsave_` prefix. Full details: [docs/TOOLS.md](docs/TOOLS.md).
 
 ## Connect in 30 seconds
 
@@ -93,7 +100,7 @@ docker compose up --build
 | `REST_RETRIES` | `2` | Retries for idempotent reads only |
 | `READINESS_UPSTREAM_TIMEOUT_MS` | `2000` | Upstream probe in `/readyz` |
 | `LOG_LEVEL` | `info` | `debug` adds redacted tool input/output bodies |
-| `MCP_SERVER_NAME` / `MCP_SERVER_VERSION` | `TronSave MCP Server` / `1.4.1` | Reported in `initialize` |
+| `MCP_SERVER_NAME` / `MCP_SERVER_VERSION` | `TronSave MCP Server` / `1.5.0` | Reported in `initialize` |
 | `PUBLIC_BASE_URL` | unset | Public origin, e.g. `https://mcp.tronsave.io`. Enables the OAuth authorization server and `/oauth/mcp` |
 | `OAUTH_ACCESS_TOKEN_TTL_SECONDS` / `OAUTH_REFRESH_TOKEN_TTL_SECONDS` | `3600` / `2592000` | OAuth token lifetimes (wallet sign-ins are capped at `SIGNATURE_MAX_AGE_SECONDS`) |
 | `TRUST_PROXY` | `1` | Reverse-proxy hops in front of the server (client IP for OAuth rate limits) |
@@ -146,7 +153,7 @@ src/
 
 Adding a tool: add the name in `src/tools/toolNames.ts`, the schemas in `definitions/*/schema.ts`, the definition (description, `auth.mode`, annotations) and a handler, update `tests/tools/toolsCount.test.ts`, then run `npm run docs:tools`.
 
-Releasing: bump `package.json`, `server.json` and the CHANGELOG, merge, then run `npm run publish:public` from a clean checkout. It publishes the release as a single snapshot commit to https://github.com/tronsave/tronsave-mcp, tags `vX.Y.Z` and creates the GitHub release; then `mcp-publisher publish` updates the MCP Registry.
+Releasing: bump `package.json`, `server.json` and the CHANGELOG, merge, then run `npm run publish:public` from a clean checkout. It appends the release as one snapshot commit (no private history) to https://github.com/tronsave/tronsave-mcp, tags `vX.Y.Z` and creates the GitHub release; then `mcp-publisher publish` updates the MCP Registry.
 
 ## Security
 

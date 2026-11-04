@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.0 — 2026-11-04
+
+### Changed
+- Tool definitions help agents choose: tools that have a counterpart on the other payment path
+  (market vs internal balance) or a close sibling (quotes, order books, extend, flash unstake,
+  notifications, Telegram alerts) now say when to use which.
+- Every input parameter, including nested ones (auto-sell config, Telegram filters, pagination
+  `offset`, delegation filters), has a description; a test keeps it that way.
+- README lists all 53 tools by group and shows the MIT license badge.
+- Public releases are appended to the public repository history instead of replacing it.
+
 ## 1.4.1 — 2026-11-04
 
 ### Fixed
