@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "tronsave": {
+      "url": "https://mcp.tronsave.io/oauth/mcp"
+    }
+  }
+}

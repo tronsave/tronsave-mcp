@@ -1,0 +1,33 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "io.github.tronsave/mcp",
+  "description": "Buy, sell and extend TRON Energy/Bandwidth on the TronSave market. Quotes need no login.",
+  "version": "1.4.1",
+  "repository": {
+    "url": "https://github.com/tronsave/tronsave-mcp",
+    "source": "github"
+  },
+  "websiteUrl": "https://docs.tronsave.io",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.tronsave.io/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Optional. `ApiKey <your TronSave API key>` unlocks internal-balance tools. Without it, public tools work and the agent can log in with `tronsave_login`.",
+          "isRequired": false,
+          "isSecret": true
+        }
+      ]
+    },
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.tronsave.io/testnet/mcp"
+    },
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.tronsave.io/oauth/mcp"
+    }
+  ]
+}
