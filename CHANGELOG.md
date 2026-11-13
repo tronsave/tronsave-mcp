@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.2 — 2026-11-13
+
+### Fixed
+- The stdio server finishes each request, including `tronsave_login`, before it reads auth for the next message, so a login is visible to the call that follows it.
+- Revoking an OAuth access token or refresh token also revokes the other token in the pair. Tokens issued before this change still revoke themselves.
+- Tool results whose data is a `{ success: false }` mutation envelope are returned with `isError: true`, so agents stop on an upstream soft failure.
+- `tronsave_bulk_create_internal_orders` describes `paymentAmount` as unit price × resource amount × receivers × whole days (`ceil(durationSec / 86400)`), and the deposit must be within 2% of that total.
+- Suggest-data `extendTo` is Unix epoch seconds, the same unit as the internal extend tools, and values that look like milliseconds are rejected.
+- API-key verification is cached separately for each network. A cached wallet signature is checked for freshness, and the cache entry expires when the signature does.
+- Upstream HTTP 401 and 403 are reported as `UPSTREAM_UNAUTHORIZED`, so the client is asked to sign in again. An API key that TronSave rejects is still an invalid key.
+- `/.well-known/mcp.json` and `/llms.txt` advertise `PUBLIC_BASE_URL` when it is set, and the production host when it is not.
+
 ## 1.5.1 — 2026-11-04
 
 ### Added

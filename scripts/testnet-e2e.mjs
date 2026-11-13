@@ -63,10 +63,19 @@ const tool = async (session, name, args = {}) => {
   if (result.isError) {
     const text = result.content?.[0]?.text ?? "";
     try {
-      return { ok: false, error: JSON.parse(text).error };
+      const parsed = JSON.parse(text);
+      if (parsed?.error && typeof parsed.error === "object") return { ok: false, error: parsed.error };
+      // `ok()` sets isError when a mutation envelope has success: false, but the body stays the envelope.
+      if (parsed && typeof parsed === "object" && parsed.success === false) {
+        const code =
+          typeof parsed.code === "string" ? parsed.code : typeof parsed.code === "number" ? String(parsed.code) : "REJECTED";
+        const message = typeof parsed.message === "string" ? parsed.message : text.slice(0, 300);
+        return { ok: false, error: { code, message } };
+      }
     } catch {
       return { ok: false, error: { code: "TEXT", message: text.slice(0, 300) } };
     }
+    return { ok: false, error: { code: "TEXT", message: text.slice(0, 300) } };
   }
   return { ok: true, data: result.structuredContent };
 };

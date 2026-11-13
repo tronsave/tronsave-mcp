@@ -130,7 +130,7 @@ export function createUserHandlers(deps: AppContainer, helper: HelperApi) {
     }
     const apiKey = requestContext.auth.apiKey;
     if (apiKey && payload.success) {
-      await redisService.delete(REDIS_KEYS.apiKeyVerified(sha256Hex(apiKey)));
+      await redisService.delete(REDIS_KEYS.apiKeyVerified(requestContext.network, sha256Hex(apiKey)));
     }
     return ok(payload);
   };

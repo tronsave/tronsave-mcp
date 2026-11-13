@@ -147,6 +147,16 @@ describe("insight tool definitions", () => {
     }
   });
 
+  it("describes bulk paymentAmount as whole days within 2%", () => {
+    const description = byName.tronsave_bulk_create_internal_orders.inputSchema.shape.paymentAmount.description ?? "";
+    expect(description).toContain(
+      "unitPrice x resourceAmount x number of receivers x ceil(durationSec / 86400)",
+    );
+    expect(description).toContain("one full day");
+    expect(description).toContain("within 2%");
+    expect(description).toContain("expected total");
+  });
+
   it("validates inputs the way TronSave does", () => {
     const create = byName.tronsave_create_auto_buy_setting.inputSchema;
     expect(create.safeParse({}).success).toBe(false);

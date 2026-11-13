@@ -36,6 +36,11 @@ export interface TokenRecord {
   resource?: string;
   grant: OAuthGrant;
   expiresAt: number;
+  /**
+   * Redis key of the other token in this access/refresh pair (`oauth:at:` / `oauth:rt:` plus the
+   * sibling's hash). Absent on records issued before pairs were stored; those still revoke alone.
+   */
+  pairKey?: string;
 }
 
 export interface OAuthTtls {
@@ -142,15 +147,17 @@ export class OAuthStore {
     const refreshTtl = Math.min(this.ttls.refreshTokenSeconds, signatureLeft ?? Infinity);
     const accessToken = opaque(ACCESS_TOKEN_PREFIX);
     const refreshToken = opaque(REFRESH_TOKEN_PREFIX);
+    const accessKey = KEYS.accessToken(accessToken);
+    const refreshKey = KEYS.refreshToken(refreshToken);
     const base = { clientId: input.clientId, scopes: input.scopes, resource: input.resource, grant: input.grant };
     await this.redis.setJson(
-      KEYS.accessToken(accessToken),
-      { ...base, expiresAt: now + accessTtl } satisfies TokenRecord,
+      accessKey,
+      { ...base, expiresAt: now + accessTtl, pairKey: refreshKey } satisfies TokenRecord,
       accessTtl,
     );
     await this.redis.setJson(
-      KEYS.refreshToken(refreshToken),
-      { ...base, expiresAt: now + refreshTtl } satisfies TokenRecord,
+      refreshKey,
+      { ...base, expiresAt: now + refreshTtl, pairKey: accessKey } satisfies TokenRecord,
       refreshTtl,
     );
     return {
@@ -176,7 +183,7 @@ export class OAuthStore {
     for (const key of [KEYS.accessToken(token), KEYS.refreshToken(token)]) {
       const record = await this.redis.getJson<TokenRecord>(key);
       if (record && record.clientId === clientId) {
-        await this.redis.delete(key);
+        await this.redis.delete(key, ...(record.pairKey ? [record.pairKey] : []));
       }
     }
   }

@@ -149,4 +149,57 @@ describe("mcp operational endpoints", () => {
       await new Promise<void>((resolve) => server.close(() => resolve()));
     }
   });
+
+  it("advertises PUBLIC_BASE_URL on /.well-known/mcp.json and /llms.txt", async () => {
+    const configured = "https://preview.tronsave.io";
+    const container = buildContainer(
+      parseEnv({ NODE_ENV: "test", MCP_PORT: "3000", PUBLIC_BASE_URL: configured }),
+    );
+    const app = createMcpApp(container, []);
+    const server = app.listen(0);
+    try {
+      const card = (await (await fetch(createUrl(server, "/.well-known/mcp.json"))).json()) as {
+        endpoints: Record<string, string>;
+        authorization?: { type: string; metadata: string };
+      };
+      expect(card.endpoints).toEqual({
+        mainnet: `${configured}/mcp`,
+        testnet: `${configured}/testnet/mcp`,
+        oauthMainnet: `${configured}/oauth/mcp`,
+        oauthTestnet: `${configured}/oauth/testnet/mcp`,
+      });
+      expect(card.authorization).toEqual({
+        type: "oauth2",
+        metadata: `${configured}/.well-known/oauth-authorization-server`,
+      });
+      const llms = await (await fetch(createUrl(server, "/llms.txt"))).text();
+      expect(llms).toContain(`POST ${configured}/mcp (mainnet)`);
+      expect(llms).toContain(`POST ${configured}/oauth/mcp (mainnet)`);
+      expect(llms).toContain(`${configured}/.well-known/oauth-authorization-server`);
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  });
+
+  it("advertises the production origin when PUBLIC_BASE_URL is unset", async () => {
+    const container = buildContainer(parseEnv({ NODE_ENV: "test", MCP_PORT: "3000" }));
+    const app = createMcpApp(container, []);
+    const server = app.listen(0);
+    try {
+      const card = (await (await fetch(createUrl(server, "/.well-known/mcp.json"))).json()) as {
+        endpoints: Record<string, string>;
+        authorization?: unknown;
+      };
+      expect(card.endpoints).toEqual({
+        mainnet: "https://mcp.tronsave.io/mcp",
+        testnet: "https://mcp.tronsave.io/testnet/mcp",
+      });
+      expect(card.authorization).toBeUndefined();
+      const llms = await (await fetch(createUrl(server, "/llms.txt"))).text();
+      expect(llms).toContain("POST https://mcp.tronsave.io/mcp (mainnet)");
+      expect(llms).toContain("POST https://mcp.tronsave.io/testnet/mcp (testnet)");
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  });
 });

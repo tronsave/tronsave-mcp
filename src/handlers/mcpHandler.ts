@@ -97,8 +97,8 @@ export const createMcpApp = (container: AppContainer, tools: ToolDefinition[]) =
   let quickstartMarkdownCache: string | null = null;
   let connectMarkdownCache: string | null = null;
 
-  // Canonical public base URL advertised to AI crawlers / registries.
-  const PUBLIC_BASE_URL = "https://mcp.tronsave.io";
+  // Origin advertised to crawlers and registries. Matches the OAuth issuer when PUBLIC_BASE_URL is set.
+  const PUBLIC_BASE_URL = baseUrl ?? "https://mcp.tronsave.io";
   const firstSentence = (text: string): string => {
     const end = text.indexOf(". ");
     return (end === -1 ? text : text.slice(0, end + 1)).trim();

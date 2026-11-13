@@ -170,11 +170,16 @@ describe("built-in OAuth 2.1 authorization server", () => {
       authorization?: { type: string; metadata: string };
     };
     expect(card.endpoints).toMatchObject({
-      oauthMainnet: "https://mcp.tronsave.io/oauth/mcp",
-      oauthTestnet: "https://mcp.tronsave.io/oauth/testnet/mcp",
+      mainnet: `${base}/mcp`,
+      testnet: `${base}/testnet/mcp`,
+      oauthMainnet: `${base}/oauth/mcp`,
+      oauthTestnet: `${base}/oauth/testnet/mcp`,
     });
-    expect(card.authorization?.type).toBe("oauth2");
-    expect(await (await fetch(`${base}/llms.txt`)).text()).toContain("/oauth/mcp (mainnet)");
+    expect(card.authorization).toEqual({
+      type: "oauth2",
+      metadata: `${base}/.well-known/oauth-authorization-server`,
+    });
+    expect(await (await fetch(`${base}/llms.txt`)).text()).toContain(`${base}/oauth/mcp (mainnet)`);
   });
 
   it("challenges unauthenticated requests on /oauth/mcp with RFC 9728 metadata", async () => {

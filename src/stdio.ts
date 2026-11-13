@@ -9,6 +9,7 @@ import { env } from "./config/env";
 import { AUTH_HEADER_PREFIX } from "./config/constants";
 import { withRequestContext } from "./handlers/authContext";
 import { createMcpServer } from "./handlers/mcpHandler";
+import { installOrderedStdioDispatch } from "./stdio/orderedDispatch";
 import { createAllTools } from "./tools";
 import { createHelper } from "./tools/handlers/helper";
 import { createInternalHandlers } from "./tools/handlers/internal";
@@ -35,17 +36,15 @@ const bootstrap = async (): Promise<void> => {
   await server.connect(transport);
 
   // Tool handlers read auth from the request context, so each message runs inside one, resolved
-  // fresh (a login changes it). The chain keeps messages in arrival order.
+  // fresh (a login changes it). The queue holds the next message until this request's JSON-RPC
+  // response is sent — `dispatch` itself returns before the SDK finishes the handler.
   const dispatch = transport.onmessage;
-  let queue = Promise.resolve();
-  transport.onmessage = (message) => {
-    queue = queue
-      .then(async () => {
-        const auth = await container.authService.detect(headers, network);
-        void withRequestContext({ headers, auth, network }, async () => dispatch?.(message));
-      })
-      .catch((error) => logger.error("MCP stdio message failed", { error: String(error) }));
-  };
+  installOrderedStdioDispatch(transport, async (message) => {
+    const auth = await container.authService.detect(headers, network);
+    await withRequestContext({ headers, auth, network }, async () => {
+      dispatch?.(message);
+    });
+  });
 
   registerDisposer(async () => server.close());
   registerDisposer(async () => container.redisService.disconnect());

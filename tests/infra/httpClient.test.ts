@@ -50,6 +50,38 @@ describe("HttpClient retry policy", () => {
     });
   });
 
+  it("maps upstream 401 and 403 to UPSTREAM_UNAUTHORIZED", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("denied", { status: 401 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(new RestClient("https://example.test").request("/v2/user-info")).rejects.toMatchObject({
+      code: "UPSTREAM_UNAUTHORIZED",
+      statusCode: 401,
+      retryable: false,
+      hint: expect.stringContaining("tronsave_login"),
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    fetchMock.mockResolvedValueOnce(new Response("forbidden", { status: 403 }));
+    await expect(new GraphQLClient("https://example.test/graphql").request("query { a }")).rejects.toMatchObject({
+      code: "UPSTREAM_UNAUTHORIZED",
+      statusCode: 403,
+      retryable: false,
+      hint: expect.stringContaining("tronsave_login"),
+    });
+  });
+
+  it("keeps other HTTP failures on the caller's error code", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("nope", { status: 400 })));
+    await expect(new RestClient("https://example.test").request("/x")).rejects.toMatchObject({
+      code: "REST_ERROR",
+      statusCode: 400,
+    });
+    await expect(new GraphQLClient("https://example.test/graphql").request("query { a }")).rejects.toMatchObject({
+      code: "GRAPHQL_HTTP_ERROR",
+      statusCode: 400,
+    });
+  });
+
   it("truncates large upstream error bodies", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("x".repeat(5000), { status: 400 })));
     const error = await new RestClient("https://example.test").request("/x").catch((e: Error) => e);

@@ -23,6 +23,24 @@ describe("response.ok", () => {
     expect(seconds.createdAt).toBe("2023-11-14T22:13:20.000Z");
     expect(millis.nested[0].updatedAt).toBe("2023-11-14T22:13:20.000Z");
   });
+
+  it("marks a plain object with success false as an error and keeps the payload", () => {
+    const result = ok({ success: false, message: "insufficient", createdAt: 1_700_000_000 });
+    expect(result.isError).toBe(true);
+    expect(result.structuredContent).toEqual({
+      success: false,
+      message: "insufficient",
+      createdAt: "2023-11-14T22:13:20.000Z",
+    });
+    expect(result.content).toEqual([{ type: "text", text: JSON.stringify(result.structuredContent) }]);
+  });
+
+  it("leaves every other payload successful", () => {
+    expect(ok({ success: true, message: "ok" }).isError).toBe(false);
+    expect(ok({ success: "false" }).isError).toBe(false);
+    expect(ok([{ success: false }]).isError).toBe(false);
+    expect(ok(null).isError).toBe(false);
+  });
 });
 
 describe("response.toolError", () => {

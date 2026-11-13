@@ -100,18 +100,19 @@ export abstract class HttpClient {
 
     if (!response.ok) {
       const body = (await response.text().catch(() => "")).slice(0, MAX_ERROR_BODY_CHARS);
+      const unauthorized = response.status === 401 || response.status === 403;
       throw new AppError(
         `${this.config.clientName} request failed: ${response.status}${body ? ` ${body}` : ""}`,
         response.status,
-        input.errorCode,
+        // Tool auth handling only refreshes the session for UPSTREAM_UNAUTHORIZED, not REST_ERROR.
+        unauthorized ? "UPSTREAM_UNAUTHORIZED" : input.errorCode,
         {
-          retryable: RETRYABLE_STATUS.has(response.status),
-          hint:
-            response.status === 401 || response.status === 403
-              ? "Credentials were rejected upstream. Re-run `tronsave_login` (or refresh the ApiKey header) and retry."
-              : response.status === 429
-                ? "Rate limited by TronSave. Wait a few seconds before retrying read-only calls."
-                : undefined,
+          retryable: unauthorized ? false : RETRYABLE_STATUS.has(response.status),
+          hint: unauthorized
+            ? "Credentials were rejected upstream. Re-run `tronsave_login` (or refresh the ApiKey header) and retry."
+            : response.status === 429
+              ? "Rate limited by TronSave. Wait a few seconds before retrying read-only calls."
+              : undefined,
         },
       );
     }

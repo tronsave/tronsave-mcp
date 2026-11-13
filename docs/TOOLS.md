@@ -548,7 +548,7 @@ List extendable delegate candidates for a `receiver` and `resourceType` (ENERGY|
 | `receiver` | string | yes | TRON base58 address (typically starts with `T`) that currently receives or will receive the delegated resource. This is the primary filter: the response describes delegates relevant to extending that account's delegation. (TRON address) |
 | `resourceType` | `ENERGY` \| `BANDWIDTH` | yes | Which resource market leg to query: `ENERGY` for contract execution headroom, `BANDWIDTH` for transaction bandwidth. Must match how you plan to extend or buy. |
 | `suggestData` | object | no | Optional nested scenario for extend-and-buy suggestion scoring. If omitted, the query returns delegate rows without that hypothetical. If provided, supply all four fields together; partial objects are invalid for typical GraphQL input shapes. |
-| `suggestData.extendTo` | number | yes | Target end time for the extended delegation window, as Unix epoch milliseconds (UTC); align with TronSave REST extend flows when comparing suggest windows. |
+| `suggestData.extendTo` | integer | yes | Target end time as Unix epoch SECONDS (UTC), e.g. now + 86400, same unit as the internal extend tools' `extendTo`. |
 | `suggestData.extraBuyAmount` | number | yes | Hypothetical extra ENERGY or BANDWIDTH units to buy beyond simple extension; units match `resourceType`, not SUN. |
 | `suggestData.extendAmount` | number | yes | Hypothetical amount of existing delegation to extend (resource units matching `resourceType`). |
 | `suggestData.maxPrice` | number | yes | Maximum unit price in SUN the user is willing to pay for the suggested extend/buy path; used for server-side scoring, not a live order placement by itself. |
@@ -1319,7 +1319,7 @@ Buy the SAME amount of ENERGY or BANDWIDTH for several receiver addresses in one
 | `unitPrice` | number | yes | Unit price in SUN per resource unit, per receiver. |
 | `durationSec` | number | yes | Delegation duration in seconds. |
 | `resourceAmount` | number | yes | Resource units bought for EACH receiver. |
-| `paymentAmount` | number | yes | Total payment in SUN for the whole batch. Must equal the total payout (about unitPrice x resourceAmount x receivers x durationSec / 86400) within 2%; a mismatch is rejected with the expected total. |
+| `paymentAmount` | number | yes | Total SUN for the whole batch = unitPrice x resourceAmount x number of receivers x ceil(durationSec / 86400) (so any rental under 1 day is charged as one full day), within 2%; a mismatch is rejected with the expected total. |
 | `sponsor` | string | no | Optional sponsor or referral code. |
 
 **Output (`structuredContent`)**

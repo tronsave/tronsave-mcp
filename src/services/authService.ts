@@ -23,6 +23,12 @@ interface SignatureVerifyCache {
   verifiedAt: number;
 }
 
+/** Seconds until `timestamp` reaches `SIGNATURE_MAX_AGE_SECONDS`. Millisecond timestamps are accepted. */
+const signatureSecondsRemaining = (timestamp: number, now: number): number => {
+  const seconds = timestamp > 1e11 ? Math.floor(timestamp / 1000) : timestamp;
+  return env.SIGNATURE_MAX_AGE_SECONDS - (now - seconds);
+};
+
 const getSingleHeader = (value: string | string[] | undefined): string | undefined => {
   const single = Array.isArray(value) ? value[0] : value;
   const trimmed = single?.trim();
@@ -122,10 +128,10 @@ export class AuthService {
 
   /**
    * Verifies an internal API key against TronSave REST (`GET /v2/user-info`), caching success
-   * for `AUTH_VERIFY_CACHE_TTL_SECONDS`. Throws `INVALID_API_KEY` when rejected.
+   * for `AUTH_VERIFY_CACHE_TTL_SECONDS` on that network. Throws `INVALID_API_KEY` when rejected.
    */
   async verifyApiKey(apiKey: string, network: Network): Promise<ApiKeyVerifyCache> {
-    const cacheKey = REDIS_KEYS.apiKeyVerified(sha256Hex(apiKey));
+    const cacheKey = REDIS_KEYS.apiKeyVerified(network, sha256Hex(apiKey));
     const cache = await this.redisService.getJson<ApiKeyVerifyCache>(cacheKey);
     if (cache) {
       return cache;
@@ -220,17 +226,24 @@ export class AuthService {
   }
 
   private async verifySignatureToken(token: string, signature: string, timestamp: number): Promise<string> {
-    if (!this.signatureService) {
+    const signatureService = this.signatureService;
+    if (!signatureService) {
       throw new AppError("Signature header auth is not enabled", 401, "UNSUPPORTED_AUTH_SCHEME");
     }
     const cacheKey = REDIS_KEYS.signatureVerified(sha256Hex(token));
     const cache = await this.redisService.getJson<SignatureVerifyCache>(cacheKey);
     if (cache) {
+      // The TTL is only an upper bound; a hit must still be inside the signature's age window.
+      signatureService.assertTimestampFresh(timestamp);
       return cache.walletAddress;
     }
-    const walletAddress = await this.signatureService.verifyLoginSignatureByTimestamp(signature, timestamp);
-    const payload: SignatureVerifyCache = { walletAddress, verifiedAt: getUnixTimestamp() };
-    await this.redisService.setJson(cacheKey, payload, env.AUTH_VERIFY_CACHE_TTL_SECONDS);
+    const walletAddress = await signatureService.verifyLoginSignatureByTimestamp(signature, timestamp);
+    const now = getUnixTimestamp();
+    const payload: SignatureVerifyCache = { walletAddress, verifiedAt: now };
+    const ttl = Math.floor(Math.min(env.AUTH_VERIFY_CACHE_TTL_SECONDS, signatureSecondsRemaining(timestamp, now)));
+    if (ttl > 0) {
+      await this.redisService.setJson(cacheKey, payload, ttl);
+    }
     return walletAddress;
   }
 }

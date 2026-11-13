@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildContainer } from "../../src/app/container";
 import { parseEnv } from "../../src/config/env";
 import { OAuthStore } from "../../src/oauth/store";
+import { sha256Hex } from "../../src/utils/crypto";
 import { getUnixTimestamp } from "../../src/utils/time";
 
 const DAY = 86_400;
@@ -42,5 +43,51 @@ describe("OAuthStore token lifetimes", () => {
     await expect(issue({ network: "mainnet", signature: `0xabc_${signedAt}`, walletAddress: "T1" })).rejects.toThrow(
       /signature behind this grant has expired/,
     );
+  });
+
+  it("stores each token's sibling key and deletes both when either one is revoked", async () => {
+    const issued = await issue({ network: "mainnet", apiKey: "k" });
+    const access = await store.getAccessToken(issued.access_token);
+    expect(access?.pairKey).toBe(`oauth:rt:${sha256Hex(issued.refresh_token)}`);
+    const refresh = await redisService.getJson<{ pairKey?: string; clientId: string }>(access!.pairKey!);
+    expect(refresh).toMatchObject({
+      clientId: "c1",
+      pairKey: `oauth:at:${sha256Hex(issued.access_token)}`,
+    });
+
+    await store.revoke(issued.refresh_token, "c1");
+    expect(await store.getAccessToken(issued.access_token)).toBeNull();
+    expect(await redisService.getJson(access!.pairKey!)).toBeNull();
+  });
+
+  it("deletes the refresh token when the access token is revoked", async () => {
+    const issued = await issue({ network: "mainnet", apiKey: "k" });
+    const access = await store.getAccessToken(issued.access_token);
+    await store.revoke(issued.access_token, "c1");
+    expect(await store.getAccessToken(issued.access_token)).toBeNull();
+    expect(await redisService.getJson(access!.pairKey!)).toBeNull();
+  });
+
+  it("leaves the pair stored when the client id does not own it", async () => {
+    const issued = await issue({ network: "mainnet", apiKey: "k" });
+    await store.revoke(issued.access_token, "someone-else");
+    const access = await store.getAccessToken(issued.access_token);
+    expect(access).toMatchObject({ clientId: "c1" });
+    expect(await redisService.getJson(access!.pairKey!)).toMatchObject({ clientId: "c1" });
+  });
+
+  it("revokes a record that has no pairKey and leaves other keys alone", async () => {
+    const token = "legacy-access-token";
+    const key = `oauth:at:${sha256Hex(token)}`;
+    const unrelated = "oauth:rt:unrelated-legacy";
+    await redisService.setJson(
+      key,
+      { clientId: "c1", scopes: [], grant: { network: "mainnet", apiKey: "k" }, expiresAt: getUnixTimestamp() + 60 },
+      60,
+    );
+    await redisService.setJson(unrelated, { marker: true }, 60);
+    await store.revoke(token, "c1");
+    expect(await redisService.getJson(key)).toBeNull();
+    expect(await redisService.getJson(unrelated)).toEqual({ marker: true });
   });
 });

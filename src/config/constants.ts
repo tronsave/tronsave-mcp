@@ -2,7 +2,7 @@ export const REDIS_KEYS = {
   signMessage: (walletAddress: string) => `auth:sign-message:${walletAddress}`,
   signMessageByTimestamp: (timestamp: number) => `auth:sign-message:timestamp:${timestamp}`,
   session: (sessionId: string) => `auth:session:${sessionId}`,
-  apiKeyVerified: (hash: string) => `auth:apikey-verified:${hash}`,
+  apiKeyVerified: (network: Network, hash: string) => `auth:apikey-verified:${network}:${hash}`,
   signatureVerified: (hash: string) => `auth:signature-verified:${hash}`,
   /** Marker proving an MCP transport session was initialized (lets any replica serve it). */
   transportSession: (sessionId: string) => `mcp:transport:${sessionId}`,

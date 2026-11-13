@@ -39,10 +39,17 @@ function transformTimestamps(data: unknown): unknown {
 
 export function ok(data: unknown): ToolResponse {
   const structured = toStructuredContentRecord(transformTimestamps(data));
+  // Mutations answer HTTP 200 with `{ success: false }` when the upstream rejects the write.
+  // `isError` is what agents branch on; the envelope itself stays in content / structuredContent.
+  const softFailure =
+    data !== null &&
+    typeof data === "object" &&
+    !Array.isArray(data) &&
+    (data as { success?: unknown }).success === false;
   return {
     content: [{ type: "text", text: JSON.stringify(structured) }],
     structuredContent: structured,
-    isError: false,
+    isError: softFailure,
   };
 }
 

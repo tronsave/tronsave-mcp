@@ -69,6 +69,35 @@ describe("userInfoOutputSchema", () => {
     });
 });
 
+describe("extendableDelegatesSuggestDataSchema.extendTo", () => {
+    const rest = { extraBuyAmount: 1, extendAmount: 1, maxPrice: 1 };
+
+    it("documents Unix epoch seconds, the same unit as internal extendTo", () => {
+        const description = schema.extendableDelegatesSuggestDataSchema.shape.extendTo.description ?? "";
+        expect(description).toContain("Unix epoch SECONDS");
+        expect(description).toContain("now + 86400");
+        expect(description).toContain("internal extend tools' `extendTo`");
+    });
+
+    it("accepts a whole-second timestamp and the 1e11 boundary", () => {
+        const extendTo = Math.floor(Date.now() / 1000) + 86_400;
+        expect(schema.extendableDelegatesSuggestDataSchema.safeParse({ ...rest, extendTo }).success).toBe(true);
+        expect(schema.extendableDelegatesSuggestDataSchema.safeParse({ ...rest, extendTo: 1e11 }).success).toBe(true);
+    });
+
+    it("rejects milliseconds, fractions, and non-positive values", () => {
+        const millis = schema.extendableDelegatesSuggestDataSchema.safeParse({ ...rest, extendTo: Date.now() });
+        expect(millis.success).toBe(false);
+        if (!millis.success) {
+            expect(millis.error.issues.map((issue) => issue.message).join(" ")).toMatch(/milliseconds are not accepted/i);
+        }
+        expect(schema.extendableDelegatesSuggestDataSchema.safeParse({ ...rest, extendTo: 1e11 + 1 }).success).toBe(false);
+        expect(schema.extendableDelegatesSuggestDataSchema.safeParse({ ...rest, extendTo: 1.5 }).success).toBe(false);
+        expect(schema.extendableDelegatesSuggestDataSchema.safeParse({ ...rest, extendTo: 0 }).success).toBe(false);
+        expect(schema.extendableDelegatesSuggestDataSchema.safeParse({ ...rest, extendTo: -86_400 }).success).toBe(false);
+    });
+});
+
 describe("schema dead-code removal (Sprint 6B)", () => {
     it.each([
         "paymentTypeEnum",

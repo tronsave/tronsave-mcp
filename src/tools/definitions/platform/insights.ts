@@ -421,7 +421,7 @@ export function createInsightTools(handlers: PlatformHandlers): ToolDefinition[]
         unitPrice: z.number().positive().describe("Unit price in SUN per resource unit, per receiver."),
         durationSec: z.number().positive().describe("Delegation duration in seconds."),
         resourceAmount: z.number().positive().describe("Resource units bought for EACH receiver."),
-        paymentAmount: z.number().positive().describe("Total payment in SUN for the whole batch. Must equal the total payout (about unitPrice x resourceAmount x receivers x durationSec / 86400) within 2%; a mismatch is rejected with the expected total."),
+        paymentAmount: z.number().positive().describe("Total SUN for the whole batch = unitPrice x resourceAmount x number of receivers x ceil(durationSec / 86400) (so any rental under 1 day is charged as one full day), within 2%; a mismatch is rejected with the expected total."),
         sponsor: z.string().optional().describe("Optional sponsor or referral code."),
       }),
       outputSchema: mutationResult.extend({ data: z.array(z.string().nullable()).nullable().optional() }),

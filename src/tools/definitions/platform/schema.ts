@@ -240,10 +240,17 @@ export const orderBookOutputSchema = z.object({
  * numbers when you want the backend to score extend-and-buy scenarios against that hypothetical.
  */
 export const extendableDelegatesSuggestDataSchema = z.object({
-    /** Unix epoch milliseconds (UTC) for the desired delegation end time; aligns conceptually with internal extend `extendTo`. */
-    extendTo: z.number().describe(
-        "Target end time for the extended delegation window, as Unix epoch milliseconds (UTC); align with TronSave REST extend flows when comparing suggest windows.",
-    ),
+    /** Unix epoch SECONDS (UTC) for the desired delegation end time, e.g. now + 86400; same unit as the internal extend tools' `extendTo`. */
+    extendTo: z
+        .number()
+        .int()
+        .positive()
+        .refine((value) => value <= 1e11, {
+            message: "Milliseconds are not accepted; use Unix epoch seconds (UTC), e.g. now + 86400.",
+        })
+        .describe(
+            "Target end time as Unix epoch SECONDS (UTC), e.g. now + 86400, same unit as the internal extend tools' `extendTo`.",
+        ),
     /** Additional resource units (same leg as `resourceType`) to purchase on top of extension, for suggest scoring. */
     extraBuyAmount: z.number().describe(
         "Hypothetical extra ENERGY or BANDWIDTH units to buy beyond simple extension; units match `resourceType`, not SUN.",

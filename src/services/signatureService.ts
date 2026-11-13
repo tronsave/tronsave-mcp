@@ -95,7 +95,7 @@ export class SignatureService {
     if (!Number.isInteger(timestamp) || timestamp <= 0) {
       throw new AppError("Invalid timestamp", 400, "INVALID_TIMESTAMP");
     }
-    this.assertFresh(timestamp);
+    this.assertTimestampFresh(timestamp);
 
     const recoveredAddress = await this.verifyWithRawOrHexMessage(timestamp.toString(), signature);
     if (!recoveredAddress || !TronWeb.isAddress(recoveredAddress)) {
@@ -108,7 +108,12 @@ export class SignatureService {
     return recoveredAddress;
   }
 
-  private assertFresh(timestamp: number): void {
+  /**
+   * Rejects a signed timestamp outside `SIGNATURE_MAX_AGE_SECONDS` (Unix seconds or milliseconds).
+   * Live verification and the signature verify cache both use this, so a cache hit cannot outlive
+   * the signature.
+   */
+  assertTimestampFresh(timestamp: number): void {
     const seconds = timestamp > 1e11 ? Math.floor(timestamp / 1000) : timestamp;
     const now = getUnixTimestamp();
     if (seconds > now + FUTURE_SKEW_SECONDS || now - seconds > env.SIGNATURE_MAX_AGE_SECONDS) {
